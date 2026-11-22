@@ -1,0 +1,241 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>The Groovy Coop</title>
+<style>
+@font-face{font-family:Bungee;src:url(fonts/Bungee.woff2)}
+@font-face{font-family:Shrikhand;src:url(fonts/Shrikhand.woff2)}
+html,body{margin:0;background:#FFF1DC;overflow:hidden}
+canvas{display:block}
+</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas>
+<script src="art.js"></script>
+<script>
+// The Groovy Coop: 30 s ad. A 16×9 wall of cards; every change is a card flip landing on the beat.
+// 120 BPM: beat 0.5 s, bar 2 s. Scenes replace the wall; each card of the new scene flips in at its
+// own time `at` (landing at at + D). Until then it shows what the previous scene had in its place.
+const W0 = 1920, H0 = 1080, COLS = 16, ROWS = 9, D = 0.36, BEAT = 0.5;
+const MAIN = document.getElementById('c'), mainCtx = MAIN.getContext('2d');
+window.DUR = 30;
+
+const clamp = (v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const hash = n => { n = Math.sin(n*127.1+311.7)*43758.5453; return n-Math.floor(n); };
+const q16 = v => Math.round(v/(BEAT/4))*(BEAT/4);              // snap to a sixteenth
+const dist = (c,r,cc,cr) => Math.hypot(c+.5-cc, r+.5-cr);
+
+// ---------- faces: draw in local coords (w*T × h*T) ----------
+function fill(c,w=1,h=1){ x.fillStyle=c; x.fillRect(0,0,w*T,h*T); }
+function scaled(k,fn){ x.save(); x.scale(k,k); fn(); x.restore(); }
+function centred(w,h,k,fn){ x.save(); x.translate(w*T/2-60*k, h*T/2-60*k); x.scale(k,k); fn(); x.restore(); }
+function fitText(text,font,size,maxW){ x.font=`${size}px ${font}`; let m=x.measureText(text).width;
+  if(m>maxW){ size=Math.floor(size*maxW/m); x.font=`${size}px ${font}`; } return size; }
+
+const FACE = {
+  pat: (fn,...a) => () => fn(T,...a),
+  icon: (fn,c,bg,...a) => () => { fill(bg); fn(T,c,...a); },
+  letter: (ch,bg) => () => { fill(bg,2,2); x.font='190px Bungee'; x.textAlign='center'; x.textBaseline='alphabetic';
+    x.fillStyle=P.ink; x.fillText(ch,T+8,2*T-32); x.fillStyle=P.paper; x.fillText(ch,T,2*T-40); },
+  band: (text,bg,fg,font,size,w,h) => () => { fill(bg,w,h); x.fillStyle=fg; fitText(text,font,size,w*T-60);
+    x.textAlign='center'; x.textBaseline='middle'; x.fillText(text,w*T/2,h*T/2+3); },
+  vinylO: t => () => { fill(P.pink,2,2); centred(2,2,1.75,()=>ICON.vinyl(T,P.sun,0.9+t*3.2)); },
+  sunO: t => () => { fill(P.teal,2,2); const rot=t*0.6;
+    x.fillStyle=P.sun; for(let i=0;i<12;i++){ x.save(); x.translate(T,T); x.rotate(i*Math.PI/6+rot); x.beginPath(); x.moveTo(-10,-70); x.lineTo(0,-98); x.lineTo(10,-70); x.fill(); x.restore(); }
+    x.beginPath(); x.arc(T,T,66,0,7); x.fill(); x.strokeStyle=P.ink; x.lineWidth=6; x.stroke();
+    const blink = ((t*1.3)%3.1)<0.12 ? 0.15 : 1;
+    x.fillStyle=P.ink; x.save(); x.translate(0,T-12); x.scale(1,blink); x.beginPath(); x.arc(T-22,0,7,0,7); x.arc(T+22,0,7,0,7); x.fill(); x.restore();
+    x.beginPath(); x.lineWidth=7; x.lineCap='round'; x.arc(T,T+4,28,0.3,Math.PI-0.3); x.stroke();
+    x.fillStyle='#FF7BA9'; x.beginPath(); x.arc(T-38,T+14,9,0,7); x.arc(T+38,T+14,9,0,7); x.fill(); },
+  // a product card: big icon on top (w×(h-1)), label band on the bottom row
+  card: (iconFn,bgFn,label,labelBg,labelFg,w,h) => () => { bgFn(w,h-1);
+    centred(w,h-1,w*0.85,iconFn); x.fillStyle=labelBg; x.fillRect(0,(h-1)*T,w*T,T);
+    x.fillStyle=labelFg; fitText(label,'Bungee',50,w*T-36); x.textAlign='center'; x.textBaseline='middle'; x.fillText(label,w*T/2,(h-0.5)*T+3); },
+};
+
+// filler pool: patterns and small icons, picked per cell by hash
+const sunset=[P.violet,P.pink,P.tang,P.sun], lagoon=[P.ink,P.teal,P.mint,P.sun];
+const POOL = [
+  FACE.pat(PAT.zig,P.violet,P.sun), FACE.icon(ICON.crystal,'#B9A6FF',P.sun), FACE.pat(PAT.dots,P.teal,P.paper),
+  FACE.icon(ICON.sock,P.mint,P.pink), FACE.pat(PAT.stripes,sunset), FACE.icon(ICON.cassette,P.tang,P.sky),
+  FACE.pat(PAT.check,P.paper,P.ink), FACE.icon(ICON.spark,P.sun,P.violet), FACE.pat(PAT.leopard,'#F2C46B',P.ink),
+  FACE.icon(ICON.shades,P.pink,P.mint), FACE.pat(PAT.squiggle,P.pink,P.paper), FACE.icon(ICON.candle,P.blush,P.teal),
+  FACE.pat(PAT.stripes,lagoon), FACE.icon(ICON.tee,P.sun,P.violet), FACE.pat(PAT.terrazzo,P.paper,[P.pink,P.teal,P.sun,P.violet],7),
+  FACE.icon(ICON.heart,P.pink,P.sun), FACE.pat(PAT.dots,P.violet,P.sun), FACE.icon(ICON.vinyl,P.sun,P.pink,0.6),
+  FACE.pat(PAT.zig,P.sun,P.pink), FACE.icon(ICON.hanger,P.ink,P.mint), FACE.pat(PAT.check,P.pink,P.paper),
+  FACE.icon(ICON.bolt,P.sun,P.ink), FACE.pat(PAT.squiggle,P.teal,P.sun), FACE.icon(ICON.pad,P.sun,P.violet),
+  FACE.pat(PAT.dots,P.mint,P.ink), FACE.icon(ICON.hen,null,P.teal), FACE.pat(PAT.rainbow,P.paper), FACE.pat(PAT.zig,P.tang,P.paper),
+];
+const pick = (seed,c,r) => POOL[Math.floor(hash(seed*1000+c*31+r*7.3)*POOL.length)];
+
+// ---------- scenes ----------
+// item: {c,r,w,h, face(t)->drawFn, at, text?, alt?:{at, face}}
+function scene(t0, items, seed, delay, opts={}){
+  const cov = Array.from({length:ROWS},()=>Array(COLS).fill(false));
+  items.forEach(it=>{ for(let j=0;j<it.h;j++)for(let i=0;i<it.w;i++) cov[it.r+j][it.c+i]=true; });
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(!cov[r][c]){
+    const f=pick(seed,c,r); const it={c,r,w:1,h:1,face:()=>f,at:delay(c,r),filler:true};
+    if(opts.twinkle && hash(seed*7+c*13+r*29)<opts.twinkle.p){
+      const f2=pick(seed+99,c,r); it.alt={at:opts.twinkle.t0+Math.floor(hash(c*5+r*11+seed)*opts.twinkle.n)*BEAT/2, face:()=>f2}; }
+    items.push(it);
+  }
+  return {t0, items};
+}
+const I = (c,r,w,h,face,at,text) => ({c,r,w,h,face,at,text});
+const still = f => () => f;
+
+// S0: the wall fills, rippling from the centre on sixteenths
+const S0 = scene(0, [], 1, (c,r)=>q16(0.45+dist(c,r,8,4.5)*0.3));
+
+// S1: the name lands, one card per beat; the rest of the wall stays
+const LAND = b => b - D;    // flip so the card lands on beat-time b
+const word = [
+  ...[['G',P.pink],['R',P.tang],['O',P.sun],['O',P.mint],['V',P.teal],['Y',P.violet]]
+     .map(([ch,bg],i)=>I(2+i*2,2,2,2,still(FACE.letter(ch,bg)),LAND(4+i*BEAT))),
+  I(2,1,2,1,still(FACE.band('THE',P.ink,P.sun,'Bungee',64,2,1)),LAND(7.0),'THE'),
+  I(3,4,2,2,still(FACE.letter('C',P.violet)),LAND(7.5)),
+  I(5,4,2,2,t=>FACE.vinylO(t),LAND(8.0)),
+  I(7,4,2,2,t=>FACE.sunO(t),LAND(8.5)),
+  I(9,4,2,2,still(FACE.letter('P',P.tang)),LAND(9.0)),
+];
+const S1 = scene(3.6, word.map(o=>({...o})), 1, ()=>-1);
+
+// S2: the wall wipes left to right into a shelf of four products
+const S2 = scene(9.75, [
+  I(2,1,12,1,still(FACE.band("WHAT'S IN THE COOP?",P.ink,P.sun,'Bungee',60,12,1)),9.75+0.12,"WHAT'S IN THE COOP?"),
+  I(2,2,3,4,still(FACE.card(()=>ICON.hanger(T,P.ink),(w,h)=>PAT.leopardBig(w*T,'#F2C46B',P.ink),'VINTAGE',P.pink,P.paper,3,4)),LAND(10.5),'VINTAGE'),
+  I(5,2,3,4,still(FACE.card(()=>ICON.tee(T,P.sun),(w,h)=>fill(P.violet,w,h),'ROCK TEES',P.sun,P.ink,3,4)),LAND(11.5),'ROCK TEES'),
+  I(8,2,3,4,still(FACE.card(()=>ICON.sock(T,P.mint),(w,h)=>fill(P.pink,w,h),'FUNNY SOCKS',P.teal,P.paper,3,4)),LAND(12.5),'FUNNY SOCKS'),
+  I(11,2,3,4,still(FACE.card(()=>ICON.crystal(T,'#C9B8FF'),(w,h)=>{ fill(P.ink,w,h); x.save(); x.globalAlpha=.9; ICON.spark(T,P.sun); x.restore(); },'CRYSTALS',P.mint,P.ink,3,4)),LAND(13.5),'CRYSTALS'),
+  I(2,6,12,1,still(FACE.band('CANDLES  ✦  RECORDS  ✦  COLLECTIBLES  ✦  GIFTS',P.sun,P.ink,'Bungee',46,12,1)),LAND(14.0),'CANDLES ✦ RECORDS ✦ COLLECTIBLES ✦ GIFTS'),
+], 2, (c,r)=>q16(9.75+c*0.06+r*0.015), {twinkle:{p:.12,t0:15.0,n:5}});
+
+// S3: the vibe
+const S3 = scene(17.75, [
+  I(1,1,8,2,still(FACE.band('women-owned',P.pink,P.paper,'Shrikhand',110,8,2)),LAND(18.25),'women-owned'),
+  I(9,1,2,2,still(()=>{ fill(P.sun,2,2); centred(2,2,1.7,()=>ICON.hen(T)); }),LAND(18.5)),
+  I(11,1,4,4,still(FACE.card(()=>ICON.pad(T,P.sun),(w,h)=>fill(P.violet,w,h),'RETRO GAMES FOR KIDS',P.ink,P.sun,4,4)),LAND(20.5),'RETRO GAMES FOR KIDS'),
+  I(1,3,10,2,still(FACE.band('everyone welcome',P.violet,P.paper,'Shrikhand',110,10,2)),LAND(18.75),'everyone welcome'),
+  I(1,5,14,1,still(FACE.band('a cozy stop on the square',P.sun,P.ink,'Shrikhand',60,14,1)),LAND(19.5),'a cozy stop on the square'),
+  I(1,6,14,1,still(FACE.band('BLOCK PARTIES  ✦  DOWNTOWN EVENTS  ✦  COMMUNITY',P.ink,P.paper,'Bungee',48,14,1)),LAND(20.0),'BLOCK PARTIES ✦ DOWNTOWN EVENTS ✦ COMMUNITY'),
+], 3, (c,r)=>q16(17.75+dist(c,r,10,3)*0.07), {twinkle:{p:.15,t0:21.5,n:5}});
+
+// S4: the end card (the approved style frame), rippling in from the centre
+const E=[];
+const ring = [
+  [0,0,FACE.pat(PAT.zig,P.violet,P.sun)],[1,0,FACE.icon(ICON.crystal,'#B9A6FF',P.sun)],[2,0,FACE.pat(PAT.dots,P.teal,P.paper)],
+  [3,0,FACE.icon(ICON.sock,P.mint,P.pink)],[4,0,FACE.pat(PAT.stripes,lagoon)],[5,0,FACE.icon(ICON.cassette,P.tang,P.sky)],
+  [6,0,FACE.pat(PAT.check,P.paper,P.ink)],[7,0,FACE.icon(ICON.spark,P.sun,P.violet)],[8,0,FACE.pat(PAT.leopard,'#F2C46B',P.ink)],
+  [9,0,FACE.icon(ICON.shades,P.pink,P.mint)],[10,0,FACE.pat(PAT.squiggle,P.pink,P.paper)],[11,0,FACE.icon(ICON.candle,P.blush,P.teal)],
+  [12,0,FACE.pat(PAT.stripes,sunset)],[13,0,FACE.icon(ICON.tee,P.sun,P.violet)],[14,0,FACE.pat(PAT.terrazzo,P.paper,[P.pink,P.teal,P.sun,P.violet],11)],
+  [15,0,FACE.icon(ICON.heart,P.pink,P.sun)],
+  [0,8,FACE.icon(ICON.pad,'#D9D2E9',P.teal)],[1,8,FACE.pat(PAT.rainbow,P.paper)],[2,8,FACE.icon(ICON.vinyl,P.sun,P.pink,0.6)],
+  [3,8,FACE.pat(PAT.zig,P.sun,P.pink)],[4,8,FACE.icon(ICON.hanger,P.ink,P.mint)],[5,8,FACE.pat(PAT.dots,P.violet,P.sun)],
+  [6,8,FACE.icon(ICON.crystal,P.teal,P.blush)],[7,8,FACE.pat(PAT.leopard,'#F2C46B',P.ink)],[8,8,FACE.icon(ICON.sock,P.sun,P.violet)],
+  [9,8,FACE.pat(PAT.stripes,lagoon)],[10,8,FACE.icon(ICON.bolt,P.sun,P.ink)],[11,8,FACE.pat(PAT.check,P.pink,P.paper)],
+  [12,8,FACE.icon(ICON.candle,P.mint,P.sun)],[13,8,FACE.pat(PAT.squiggle,P.teal,P.sun)],[14,8,FACE.icon(ICON.cassette,P.pink,P.paper)],
+  [15,8,FACE.pat(PAT.zig,P.tang,P.paper)],
+  [0,1,FACE.icon(ICON.tee,P.pink,P.teal)],[0,2,FACE.pat(PAT.terrazzo,P.sun,[P.ink,P.pink,P.paper],5)],[0,3,FACE.icon(ICON.heart,P.tang,P.paper)],
+  [0,4,FACE.pat(PAT.stripes,sunset)],[0,5,FACE.icon(ICON.spark,P.pink,P.ink)],[0,6,FACE.pat(PAT.dots,P.mint,P.ink)],[0,7,FACE.icon(ICON.shades,P.sun,P.pink)],
+  [15,1,FACE.pat(PAT.check,P.teal,P.paper)],[15,2,FACE.icon(ICON.vinyl,P.pink,P.sun,2.1)],[15,3,FACE.pat(PAT.zig,P.mint,P.violet)],
+  [15,4,FACE.icon(ICON.pad,P.sun,P.violet)],[15,5,FACE.pat(PAT.leopard,'#F2C46B',P.ink)],[15,6,FACE.icon(ICON.hen,null,P.teal)],[15,7,FACE.pat(PAT.stripes,sunset)],
+  [1,1,FACE.icon(ICON.spark,P.teal,P.paper)],[4,1,FACE.pat(PAT.dots,P.paper,P.pink)],[10,1,FACE.icon(ICON.heart,P.violet,P.paper)],[14,1,FACE.icon(ICON.hen,null,P.sun)],
+  [11,4,FACE.icon(ICON.sock,P.pink,P.sun)],[12,4,FACE.icon(ICON.crystal,'#C9B8FF',P.ink)],[13,4,FACE.pat(PAT.squiggle,P.sun,P.violet)],[14,4,FACE.icon(ICON.candle,P.pink,P.mint)],
+  [11,5,FACE.icon(ICON.cassette,P.teal,P.blush)],[12,5,FACE.pat(PAT.check,P.sun,P.ink)],[13,5,FACE.icon(ICON.tee,P.paper,P.pink)],[14,5,FACE.pat(PAT.dots,P.ink,P.sun)],
+];
+const rip = (c,r) => q16(23.75+dist(c,r,8,4.5)*0.13);
+ring.forEach(([c,r,f],k)=>{ const it=I(c,r,1,1,still(f),rip(c,r)); if(hash(k*3.7)<0.22) it.alt={at:26.5+Math.floor(hash(k*9.1)*6)*BEAT, face:still(pick(5,c,r))}; E.push(it); });
+const ripB = (it) => rip(it.c+it.w/2-.5, it.r+it.h/2-.5);
+[
+  I(5,1,5,1,still(FACE.band('good vibes & great finds',P.teal,P.paper,'Shrikhand',46,5,1)),0,'good vibes & great finds'),
+  I(11,1,3,1,still(FACE.band('women-owned',P.pink,P.paper,'Shrikhand',44,3,1)),0,'women-owned'),
+  I(1,2,1,2,still(()=>PAT.stripes(T,lagoon,2*T)),0), I(14,2,1,2,still(()=>PAT.stripes(T,sunset,2*T)),0),
+  I(1,4,2,2,still(()=>PAT.terrazzo(2*T,P.violet,[P.sun,P.pink,P.paper,P.mint],3)),0),
+  I(1,6,14,1,still(FACE.band('VINTAGE  ✦  ROCK TEES  ✦  FUNNY SOCKS  ✦  CRYSTALS  ✦  GIFTS',P.sun,P.ink,'Bungee',46,14,1)),0,'VINTAGE ✦ ROCK TEES ✦ FUNNY SOCKS ✦ CRYSTALS ✦ GIFTS'),
+  I(1,7,4,1,still(FACE.band('everyone welcome',P.violet,P.paper,'Shrikhand',42,4,1)),0,'everyone welcome'),
+  I(5,7,10,1,still(FACE.band('HISTORIC DOWNTOWN McKINNEY, TX',P.ink,P.paper,'Bungee',50,10,1)),0,'HISTORIC DOWNTOWN McKINNEY, TX'),
+].forEach(it=>{ it.at=ripB(it); E.push(it); });
+// the name lands again on beats, after the ripple has cleared the centre
+const endBeat = [24.5,24.75,25.0,25.25,25.5,25.75, 24.25, 26.0,26.25,26.5,26.75];
+word.forEach((w,i)=>{ const o={...w}; o.at = LAND(endBeat[i]); E.push(o); });
+const S4 = scene(23.75, E, 4, ()=>23.75);
+
+const SCENES=[S0,S1,S2,S3,S4];
+const ENDS = SCENES.map((s,k)=> k+1<SCENES.length ? SCENES[k+1].t0 : Infinity);
+
+// ---------- drawing ----------
+const bufs = SCENES.map(()=>{ const c=document.createElement('canvas'); c.width=W0; c.height=H0; return c; });
+
+function paper(ctx, t){ ctx.fillStyle=P.paper; ctx.fillRect(0,0,W0,H0);
+  const g=clamp(t/0.7); ctx.strokeStyle='rgba(42,23,72,.08)'; ctx.lineWidth=1;
+  for(let i=0;i<=COLS;i++){ ctx.beginPath(); ctx.moveTo(i*T,0); ctx.lineTo(i*T,H0*g); ctx.stroke(); }
+  for(let j=0;j<=ROWS;j++){ ctx.beginPath(); ctx.moveTo(0,j*T); ctx.lineTo(W0*g,j*T); ctx.stroke(); } }
+
+// draw one card: face fn at horizontal squash `sx` (0..1), shaded `sh`
+function card(it, drawFn, sx, sh){
+  const W=it.w*T-GAP, H=it.h*T-GAP, cx=it.c*T+it.w*T/2, cy=it.r*T+it.h*T/2, vy=it.w>2*it.h;  // wide bands flip about the horizontal axis
+  const kx=vy?1:Math.max(sx,0.001), ky=vy?Math.max(sx,0.001):1;
+  x.save(); x.translate(cx,cy);
+  x.fillStyle=P.ink; x.beginPath(); x.roundRect(-W/2*kx+7,-H/2*ky+7,W*kx,H*ky,14); x.fill();
+  x.scale(kx,ky); x.beginPath(); x.roundRect(-W/2,-H/2,W,H,14); x.clip();
+  x.translate(-W/2,-H/2); x.scale(W/(it.w*T),H/(it.h*T)); drawFn();
+  if(sh>0){ x.fillStyle=`rgba(42,23,72,${sh})`; x.fillRect(0,0,it.w*T,it.h*T); }
+  x.restore();
+}
+// the previous scene's pixels in this card's cell region, squashed
+function copyPrev(prev, it, sx, sh){
+  const sx0=it.c*T, sy0=it.r*T, w=it.w*T, h=it.h*T;
+  const vy=it.w>2*it.h; x.save(); x.translate(sx0+w/2, sy0+h/2); x.scale(vy?1:Math.max(sx,0.001), vy?Math.max(sx,0.001):1);
+  x.drawImage(prev, sx0,sy0,w,h, -w/2,-h/2,w,h);
+  if(sh>0){ x.fillStyle=`rgba(42,23,72,${sh})`; x.beginPath(); x.roundRect(-w/2+GAP/2,-h/2+GAP/2,w-GAP,h-GAP,14); x.fill(); }
+  x.restore();
+}
+
+function renderScene(k, t, ctx){
+  const S=SCENES[k];
+  let prev=null;
+  const needPrev = S.items.some(it=>t < it.at + D/2);
+  if(needPrev){ if(k>0){ renderScene(k-1, t, bufs[k-1].getContext('2d')); prev=bufs[k-1]; } }
+  x=ctx; paper(ctx,t);
+  // pass 1: cards not yet turned past edge-on show the previous scene
+  for(const it of S.items){ const p=(t-it.at)/D;
+    if(p<0.5){ if(prev){ if(p<=0) copyPrev(prev,it,1,0); else { const s=Math.cos(p*Math.PI); x=ctx; copyPrev(prev,it,s,(1-s)*.45); } } } }
+  x=ctx;
+  // pass 2: cards turning in, landed, or turning to their alternate face
+  for(const it of S.items){ const p=(t-it.at)/D; if(p<0.5) continue;
+    const s=Math.min(1,Math.abs(Math.cos(Math.min(p,1)*Math.PI)));
+    let fn=it.face(t);
+    if(it.alt && t>=it.alt.at){ const pa=(t-it.alt.at)/D;
+      if(pa<1){ const sa=Math.abs(Math.cos(pa*Math.PI)); card(it, pa<0.5?fn:it.alt.face(t), sa, (1-sa)*.45); continue; }
+      fn=it.alt.face(t); }
+    card(it, fn, s, (1-s)*.45);
+  }
+}
+
+window.render = t => {
+  let k=0; for(let i=0;i<SCENES.length;i++) if(t>=SCENES[i].t0) k=i;
+  renderScene(k, t, mainCtx);
+};
+
+// every text fully on screen at t (for the reading-time check)
+window.TEXTS = t => {
+  const out=[]; let k=0; for(let i=0;i<SCENES.length;i++) if(t>=SCENES[i].t0) k=i;
+  SCENES.forEach((S,si)=>S.items.forEach((it,ii)=>{ if(!it.text) return;
+    const shown = t>=it.at+D && (si===k ? true : false);
+    // a card of an earlier scene stays visible until the new card over it starts to turn
+    let still = false;
+    if(si<k){ still = SCENES.slice(si+1,k+1).every(N=>N.items.every(n=>!(overlap(n,it)) || t<n.at)); }
+    if(shown || (still && t>=it.at+D)) out.push({id:`s${si}i${ii}`, text:it.text, x0:it.c*T, y0:it.r*T, x1:(it.c+it.w)*T, y1:(it.r+it.h)*T});
+  }));
+  return out;
+};
+const overlap=(a,b)=>a.c<b.c+b.w && b.c<a.c+a.w && a.r<b.r+b.h && b.r<a.r+a.h;
+
+// sound cues: a click when each card lands, louder thumps for the big ones
+const EV=[];
+SCENES.forEach((S,si)=>S.items.forEach(it=>{
+  if(it.at>=0) EV.push({t:+(it.at+D).toFixed(3), type: it.w*it.h>=4 ? 'big' : (it.w*it.h>1?'mid':'flip'), scene:si});
+  if(it.alt) EV.push({t:+(it.alt.at+D).toFixed(3), type:'flip', scene:si});
+}));
+EV.sort((a,b)=>a.t-b.t); window.EV=EV;
+
+(async()=>{ await document.fonts.load('190px Bungee'); await document.fonts.load('60px Shrikhand');
+  window.render(0); window.READY=true; })();
+</script></body></html>
