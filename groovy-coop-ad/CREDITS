@@ -1,0 +1,14 @@
+The Groovy Coop: 30 s ad
+
+Fonts
+- Bungee, by David Jonathan Ross. SIL Open Font License 1.1. https://fonts.google.com/specimen/Bungee
+- Shrikhand, by Jonny Pinhorn. SIL Open Font License 1.1. https://fonts.google.com/specimen/Shrikhand
+
+Music and sound
+- Score and sound effects synthesised in code (mix.py; procedural sound helpers from the Lemo-Opuscar
+  library's core/audio/sfx.py). No samples or recordings.
+
+Pictures
+- All tiles, patterns and icons drawn in code (art.js, index.html). The customer review photos the user
+  shared were used as reference only and do not appear in the film.
+- The shop name is set in Bungee as a placeholder; the business's own logo is not yet included.
