@@ -37,8 +37,8 @@ const PAT = {
     for(let i=0;i<9;i++){ const cx=(i%3)*42+18+(Math.floor(i/3)%2)*16, cy=Math.floor(i/3)*40+20;
       x.strokeStyle=c2; x.lineWidth=6; x.lineCap='round'; x.beginPath(); x.arc(cx,cy,11,0.4+i,3.6+i); x.stroke();
       x.fillStyle='#C97A2B'; x.beginPath(); x.arc(cx,cy,4,0,7); x.fill(); } },
-  rainbow(s,bg){ x.fillStyle=bg; x.fillRect(0,0,s,s); const cs=[P.pink,P.tang,P.sun,P.mint,P.teal,P.violet];
-    cs.forEach((c,i)=>{ x.strokeStyle=c; x.lineWidth=9; x.beginPath(); x.arc(s/2,s*0.86,52-i*9,Math.PI,0); x.stroke(); }); },
+  rainbow(s,bg){ x.fillStyle=bg; x.fillRect(0,0,s,s); const cs=[P.violet,P.pink,P.tang,P.sun];
+    cs.forEach((c,i)=>{ x.strokeStyle=c; x.lineWidth=12; x.beginPath(); x.arc(s/2,s*0.86,50-i*12,Math.PI,0); x.stroke(); }); },
 };
 
 // ---------- icons (drawn centred in an s×s tile) ----------
@@ -122,29 +122,29 @@ async function frame(){
   for(let i=0;i<=16;i++){ x.beginPath(); x.moveTo(i*T,0); x.lineTo(i*T,1080); x.stroke(); }
   for(let j=0;j<=9;j++){ x.beginPath(); x.moveTo(0,j*T); x.lineTo(1920,j*T); x.stroke(); }
 
-  const trans=[P.sky,P.blush,P.white,P.blush,P.sky];
-  const pride=[P.pink,P.tang,P.sun,P.mint,P.teal,P.violet];
+  const sunset=[P.violet,P.pink,P.tang,P.sun];
+  const lagoon=[P.ink,P.teal,P.mint,P.sun];
   // border ring of pattern and product tiles (the shop's shelves, as cards)
   const ring = [
     // row 0
     [0,0,()=>PAT.zig(T,P.violet,P.sun)], [1,0,()=>ICON.crystal(T,'#B9A6FF'),{bg:P.sun}], [2,0,()=>PAT.dots(T,P.teal,P.paper)],
-    [3,0,()=>ICON.sock(T,P.mint),{bg:P.pink,flip:0.32}], [4,0,()=>PAT.stripes(T,pride)], [5,0,()=>ICON.cassette(T,P.tang),{bg:P.sky}],
+    [3,0,()=>ICON.sock(T,P.mint),{bg:P.pink,flip:0.32}], [4,0,()=>PAT.stripes(T,lagoon)], [5,0,()=>ICON.cassette(T,P.tang),{bg:P.sky}],
     [6,0,()=>PAT.check(T,P.paper,P.ink)], [7,0,()=>ICON.spark(T,P.sun),{bg:P.violet}], [8,0,()=>PAT.leopard(T,'#F2C46B',P.ink)],
     [9,0,()=>ICON.shades(T,P.pink),{bg:P.mint}], [10,0,()=>PAT.squiggle(T,P.pink,P.paper)], [11,0,()=>ICON.candle(T,P.blush),{bg:P.teal}],
-    [12,0,()=>PAT.stripes(T,trans)], [13,0,()=>ICON.tee(T,P.sun),{bg:P.violet,flip:0.62}], [14,0,()=>PAT.terrazzo(T,P.paper,[P.pink,P.teal,P.sun,P.violet])],
+    [12,0,()=>PAT.stripes(T,sunset)], [13,0,()=>ICON.tee(T,P.sun),{bg:P.violet,flip:0.62}], [14,0,()=>PAT.terrazzo(T,P.paper,[P.pink,P.teal,P.sun,P.violet])],
     [15,0,()=>ICON.heart(T,P.pink),{bg:P.sun}],
     // row 8
     [0,8,()=>ICON.pad(T,'#D9D2E9'),{bg:P.teal}], [1,8,()=>PAT.rainbow(T,P.paper)], [2,8,()=>ICON.vinyl(T,P.sun,0.6),{bg:P.pink}],
     [3,8,()=>PAT.zig(T,P.sun,P.pink)], [4,8,()=>ICON.hanger(T,P.ink),{bg:P.mint}], [5,8,()=>PAT.dots(T,P.violet,P.sun)],
     [6,8,()=>ICON.crystal(T,P.teal),{bg:P.blush,flip:0.44}], [7,8,()=>PAT.leopard(T,'#F2C46B',P.ink)], [8,8,()=>ICON.sock(T,P.sun),{bg:P.violet}],
-    [9,8,()=>PAT.stripes(T,pride)], [10,8,()=>ICON.bolt(T,P.sun),{bg:P.ink}], [11,8,()=>PAT.check(T,P.pink,P.paper)],
+    [9,8,()=>PAT.stripes(T,lagoon)], [10,8,()=>ICON.bolt(T,P.sun),{bg:P.ink}], [11,8,()=>PAT.check(T,P.pink,P.paper)],
     [12,8,()=>ICON.candle(T,P.mint),{bg:P.sun}], [13,8,()=>PAT.squiggle(T,P.teal,P.sun)], [14,8,()=>ICON.cassette(T,P.pink),{bg:P.paper}],
     [15,8,()=>PAT.zig(T,P.tang,P.paper)],
     // columns 0 and 15
     [0,1,()=>ICON.tee(T,P.pink),{bg:P.teal}], [0,2,()=>PAT.terrazzo(T,P.sun,[P.ink,P.pink,P.paper])], [0,3,()=>ICON.heart(T,P.tang),{bg:P.paper}],
-    [0,4,()=>PAT.stripes(T,trans),{flip:0.4}], [0,5,()=>ICON.spark(T,P.pink),{bg:P.ink}], [0,6,()=>PAT.dots(T,P.mint,P.ink)], [0,7,()=>ICON.shades(T,P.sun),{bg:P.pink}],
+    [0,4,()=>PAT.stripes(T,sunset),{flip:0.4}], [0,5,()=>ICON.spark(T,P.pink),{bg:P.ink}], [0,6,()=>PAT.dots(T,P.mint,P.ink)], [0,7,()=>ICON.shades(T,P.sun),{bg:P.pink}],
     [15,1,()=>PAT.check(T,P.teal,P.paper)], [15,2,()=>ICON.vinyl(T,P.pink,2.1),{bg:P.sun}], [15,3,()=>PAT.zig(T,P.mint,P.violet)],
-    [15,4,()=>ICON.pad(T,P.sun),{bg:P.violet}], [15,5,()=>PAT.leopard(T,'#F2C46B',P.ink),{flip:0.72}], [15,6,()=>ICON.hen(T),{bg:P.teal}], [15,7,()=>PAT.stripes(T,pride)],
+    [15,4,()=>ICON.pad(T,P.sun),{bg:P.violet}], [15,5,()=>PAT.leopard(T,'#F2C46B',P.ink),{flip:0.72}], [15,6,()=>ICON.hen(T),{bg:P.teal}], [15,7,()=>PAT.stripes(T,lagoon)],
   ];
   ring.forEach(([c,r,d,o])=>tile(c,r,1,1,d,o||{}));
 
@@ -154,14 +154,14 @@ async function frame(){
   tile(14,1,1,1,()=>ICON.hen(T),{bg:P.sun});
   tile(4,1,1,1,()=>PAT.dots(T,P.paper,P.pink));
   tile(10,1,1,1,()=>ICON.heart(T,P.violet),{bg:P.paper});
-  bandTile(5,1,5,1,'LGBTQIA+ friendly',P.teal,P.paper,'46px Shrikhand');
+  bandTile(5,1,5,1,'good vibes & great finds',P.teal,P.paper,'46px Shrikhand');
   tile(1,1,1,1,()=>ICON.spark(T,P.teal),{bg:P.paper});
 
   // GROOVY: six 2×2 letter cards, one mid-flip
   const g=[['G',P.pink],['R',P.tang],['O',P.sun],['O',P.mint],['V',P.teal],['Y',P.violet]];
   g.forEach(([ch,bg],i)=> letterTile(2+i*2,2,ch,bg,{flip: i===4?0.28:0}));
-  tile(1,2,1,2,()=>PAT.stripes(T,pride,2*T),{});
-  tile(14,2,1,2,()=>PAT.stripes(T,trans,2*T),{});
+  tile(1,2,1,2,()=>PAT.stripes(T,lagoon,2*T),{});
+  tile(14,2,1,2,()=>PAT.stripes(T,sunset,2*T),{});
 
   // COOP: the first O is a spinning record, the second is a little sun-face
   tile(1,4,2,2,()=>{ PAT.terrazzo(2*T,P.violet,[P.sun,P.pink,P.paper,P.mint]); },{});
