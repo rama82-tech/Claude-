@@ -1,4 +1,4 @@
 schema_version: "1.1"
 name: bell-state-and-leo-orbit
 expected_outcome: |
-  Working NumPy code for a Bell state and a two-body orbit, pytest checks for normalization and energy conservation that pass, labeled plots with units, and a short report with the orbital period (about 92.4 min).
+  Working NumPy code for a Bell state and a two-body orbit, pytest checks for normalization and energy conservation that pass, labeled plots with units, and a short report with the orbital period (about 92.6 min).
