@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: vqc-classifier-moons
+expected_outcome: |
+  Handles missing PennyLane/Qiskit by falling back to NumPy (or installing), labels the dataset as synthetic, reports test accuracy against a classical baseline, includes unitarity/probability checks in pytest, and saves a decision boundary or training curve plot.
