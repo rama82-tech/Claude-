@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BL Field Hologram</title>
+<style>
+  :root{--c:#35e6ff;--c2:#7ab8ff;--amb:#ffc24a;--bg:#02060d;--ink:#d8f6ff}
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%;background:var(--bg);overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+  canvas{display:block;position:fixed;inset:0}
+  .hud{position:fixed;inset:0;pointer-events:none}
+  .top-l{position:absolute;left:3vw;top:3.2vh}
+  .brand{font-weight:800;letter-spacing:.28em;font-size:clamp(11px,1.15vw,20px);color:var(--c)}
+  .brand small{display:block;font-weight:500;letter-spacing:.2em;color:#7fb4c4;font-size:.72em;margin-top:.4em}
+  .top-r{position:absolute;right:3vw;top:3.2vh;text-align:right;font-size:clamp(10px,1vw,17px);letter-spacing:.12em;color:#9fd8e8;line-height:1.6}
+  .top-r b{color:var(--ink);font-weight:700}
+  .tag{display:inline-block;margin-top:.5em;border:1px solid #2a6a7c;padding:.15em .7em;color:#6fb6c8;font-size:.82em;letter-spacing:.18em}
+  .caption{position:absolute;left:0;bottom:0;padding:0 3vw 5vh;width:60vw;padding-top:9vh;background:linear-gradient(0deg,rgba(2,6,13,.85) 55%,rgba(2,6,13,0));-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
+  .caption .step{font-size:clamp(10px,1vw,17px);letter-spacing:.3em;color:var(--c)}
+  .caption h1{font-size:clamp(22px,3.3vw,58px);font-weight:700;line-height:1.08;margin-top:.25em;text-shadow:0 0 24px rgba(53,230,255,.45)}
+  .caption p{margin-top:.6em;font-size:clamp(11px,1.15vw,20px);color:#9fc6d2;line-height:1.5}
+  .stats{position:absolute;right:3vw;bottom:5vh;width:min(23vw,360px);border:1px solid #1e5566;background:linear-gradient(180deg,rgba(6,28,40,.62),rgba(3,14,22,.62));padding:1.1vw 1.3vw;opacity:0;transition:none}
+  .stats h3{font-size:clamp(9px,.85vw,14px);letter-spacing:.28em;color:var(--c);font-weight:600;margin-bottom:.7em}
+  .row{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(53,230,255,.14);padding:.5em 0;font-size:clamp(10px,1vw,17px);color:#8fbccb}
+  .row b{font-size:1.45em;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
+  .row b i{font-style:normal;font-size:.55em;color:#7fb4c4;font-weight:500;margin-left:.3em}
+  .row.hi b{color:var(--amb)}
+  .lbl{position:absolute;left:0;top:0;transform:translate(-50%,-100%);white-space:nowrap;font-size:clamp(9px,.95vw,16px);letter-spacing:.14em;color:var(--ink);padding:.25em .7em;border:1px solid var(--c);background:rgba(2,18,28,.7);opacity:0}
+  .lbl::after{content:"";position:absolute;left:50%;top:100%;height:1.6vh;border-left:1px solid var(--c)}
+  .lbl.amb{border-color:var(--amb);color:#ffe3a6}.lbl.amb::after{border-color:var(--amb)}
+  .timeline{position:absolute;left:3vw;right:3vw;bottom:2.2vh;height:2px;background:rgba(53,230,255,.12)}
+  .timeline i{position:absolute;left:0;top:0;bottom:0;background:var(--c);box-shadow:0 0 8px var(--c);width:0}
+  .vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%)}
+  .scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);mix-blend-mode:overlay}
+</style>
+</head>
+<body>
+<div class="hud" id="hud">
+  <div class="top-l"><div class="brand">BL · BEYOND LIMITS<small>FIELD HOLOGRAM · SITE-TO-SUNSET PLAN</small></div></div>
+  <div class="top-r">PLOT <b>5,400 sq ft</b> · 502 m²<br>RANGE 4,800 – 6,000 sq ft (≈ 445 – 560 m²)<br><span class="tag">SYNTHETIC DEMO FIELD</span></div>
+  <div class="caption"><div class="step" id="cStep"></div><h1 id="cTitle"></h1><p id="cText"></p></div>
+  <div class="stats" id="stats">
+    <h3>SITE REPORT · ESTIMATE</h3>
+    <div class="row"><span>Plot area</span><b>5,400<i>sq ft</i></b></div>
+    <div class="row"><span>Panels placed</span><b id="sPanels">0</b></div>
+    <div class="row hi"><span>System size</span><b id="sKwp">0.0<i>kWp</i></b></div>
+    <div class="row"><span>Yearly energy</span><b id="sKwh">0<i>kWh</i></b></div>
+    <div class="row"><span>Size range 4,800–6,000</span><b id="sRange" style="font-size:1.05em">—</b></div>
+  </div>
+  <div class="timeline"><i id="tl"></i></div>
+  <div class="lbl" id="lPond">FARM-POND SPOT</div>
+  <div class="lbl" id="lWet">WET ZONE · NO PANELS</div>
+  <div class="lbl amb" id="lSun">BEST SOLAR GROUND</div>
+</div>
+<div class="scan"></div><div class="vig"></div>
+
+<script type="importmap">
+{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+
+const RECORD = new URLSearchParams(location.search).has('record');
+window.__recording = RECORD;
+const DUR = 34;                        // seconds per loop
+const W = 24, D = 21;                  // metres  (24 x 21 = 504 m² ≈ 5,425 sq ft)
+const EX = 2.4;                        // height exaggeration for display
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const sm=(a,b,x)=>{x=clamp((x-a)/(b-a));return x*x*(3-2*x)};
+const mix=(a,b,t)=>a+(b-a)*t;
+
+/* ---------- synthetic terrain (demo only, no real survey data) ---------- */
+const P1={x:6,z:6}, P2={x:-7,z:7};
+function H(x,z){
+  return -0.06*z + 0.30*Math.sin(x*0.25+1) + 0.55*Math.exp(-((x+6)**2+(z+4)**2)/30)
+       - 0.95*Math.exp(-((x-P1.x)**2+(z-P1.z)**2)/14)
+       - 0.45*Math.exp(-((x-P2.x)**2+(z-P2.z)**2)/10)
+       + 0.12*Math.sin(0.9*x)*Math.sin(0.7*z);
+}
+function wetAt(x,z){
+  const w=1.25*Math.exp(-((x-P1.x)**2+(z-P1.z)**2)/22)+0.9*Math.exp(-((x-P2.x)**2+(z-P2.z)**2)/12);
+  return clamp(w);
+}
+const gx=(x,z)=>(H(x+.05,z)-H(x-.05,z))/.1, gz=(x,z)=>(H(x,z+.05)-H(x,z-.05))/.1;
+function scoreAt(x,z){
+  // south (+z) facing slopes score higher; wet ground and plot edges score lower
+  const south=clamp(0.62-gz(x,z)*2.2);
+  const edge=Math.min(sm(0,1.8,W/2-Math.abs(x)),sm(0,1.8,D/2-Math.abs(z)));
+  return clamp(south*(1-0.75*wetAt(x,z))*(0.35+0.65*edge));
+}
+
+/* ---------- renderer ---------- */
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth,innerHeight);
+renderer.setClearColor(0x02060d,1);
+document.body.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x02060d,0.012);
+const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,0.1,300);
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.45,0.6,0.55);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+
+const root=new THREE.Group(); scene.add(root);
+
+/* ---------- terrain hologram ---------- */
+const SEG_X=120, SEG_Z=105;
+const geo=new THREE.PlaneGeometry(W,D,SEG_X,SEG_Z); geo.rotateX(-Math.PI/2);
+{
+  const pos=geo.attributes.position, n=pos.count;
+  const wet=new Float32Array(n), score=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    const x=pos.getX(i), z=pos.getZ(i);
+    pos.setY(i,H(x,z)*EX); wet[i]=wetAt(x,z); score[i]=scoreAt(x,z);
+  }
+  geo.setAttribute('wet',new THREE.BufferAttribute(wet,1));
+  geo.setAttribute('score',new THREE.BufferAttribute(score,1));
+}
+const terrainMat=new THREE.ShaderMaterial({
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.FrontSide,
+  uniforms:{uScan:{value:-W/2-1},uMode:{value:0},uTime:{value:0},uWet:{value:0}},
+  vertexShader:`
+    attribute float wet; attribute float score;
+    varying vec3 vP; varying float vWet; varying float vScore;
+    void main(){ vP=position; vWet=wet; vScore=score; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+  fragmentShader:`
+    uniform float uScan,uMode,uTime,uWet; varying vec3 vP; varying float vWet; varying float vScore;
+    float line(float v,float w){ float f=abs(fract(v-0.5)-0.5)/fwidth(v); return 1.0-clamp(f/w,0.0,1.0); }
+    void main(){
+      float vis=step(vP.x,uScan);
+      float edge=exp(-abs(vP.x-uScan)*3.2)*step(vP.x,uScan+0.6);
+      float g=max(line(vP.x,1.1),line(vP.z,1.1));                 // 1 m grid
+      float c=line(vP.y/${EX.toFixed(1)}*5.0,1.0)*0.55;             // contour lines
+      vec3 cy=vec3(0.12,0.85,1.0), bl=vec3(0.12,0.38,1.0), am=vec3(1.0,0.72,0.2), rd=vec3(1.0,0.35,0.15);
+      vec3 water=mix(cy,bl,vWet*uWet);
+      vec3 heat=mix(rd,am,smoothstep(0.1,0.5,vScore)); heat=mix(heat,vec3(0.9,1.0,0.5),smoothstep(0.65,1.0,vScore));
+      vec3 base=mix(water,heat,uMode);
+      float fill=mix(0.03+0.20*vWet*uWet, 0.04+0.26*vScore, uMode);
+      float li=max(g*0.85,c*0.6)*mix(1.0,0.55+0.9*vScore,uMode);
+      float pulse=0.92+0.08*sin(uTime*2.0+vP.x*0.7);
+      vec3 col=0.78*base*(fill+li)*pulse + vec3(0.7,1.0,1.0)*edge*1.6;
+      float a=vis*(0.9)+edge*0.6;
+      gl_FragColor=vec4(col*a,1.0);
+    }`
+});
+terrainMat.extensions={derivatives:true};
+const terrain=new THREE.Mesh(geo,terrainMat); root.add(terrain);
+
+// base platform: plot slab edge + rings
+const baseY=-1.6;
+const slabMat=new THREE.LineBasicMaterial({color:0x35e6ff,transparent:true,opacity:.8,blending:THREE.AdditiveBlending});
+function rectLoop(w,d,y,mat,dashed){
+  const pts=[new THREE.Vector3(-w/2,y,-d/2),new THREE.Vector3(w/2,y,-d/2),new THREE.Vector3(w/2,y,d/2),new THREE.Vector3(-w/2,y,d/2),new THREE.Vector3(-w/2,y,-d/2)];
+  const g=new THREE.BufferGeometry().setFromPoints(pts);
+  const l=new THREE.Line(g,mat); if(dashed) l.computeLineDistances(); return l;
+}
+root.add(rectLoop(W,D,baseY,slabMat));
+// terrain edge curtain (vertical lines along the border dropping to the slab)
+{
+  const pts=[];
+  for(let i=0;i<=SEG_X;i+=6){const x=-W/2+W*i/SEG_X; for(const z of[-D/2,D/2]){pts.push(x,H(x,z)*EX,z,x,baseY,z);}}
+  for(let i=0;i<=SEG_Z;i+=6){const z=-D/2+D*i/SEG_Z; for(const x of[-W/2,W/2]){pts.push(x,H(x,z)*EX,z,x,baseY,z);}}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  root.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x1b8fb0,transparent:true,opacity:.28,blending:THREE.AdditiveBlending})));
+}
+// size-range ghosts (4,800 and 6,000 sq ft, same proportions)
+const sMin=Math.sqrt(4800/5400), sMax=Math.sqrt(6000/5400);
+const ghostMat=new THREE.LineDashedMaterial({color:0xffc24a,dashSize:.5,gapSize:.35,transparent:true,opacity:.0,blending:THREE.AdditiveBlending});
+const gMin=rectLoop(W*sMin,D*sMin,baseY,ghostMat,true), gMax=rectLoop(W*sMax,D*sMax,baseY,ghostMat,true);
+root.add(gMin,gMax);
+// hologram projector disc
+const discGroup=new THREE.Group(); discGroup.position.y=baseY-0.05; root.add(discGroup);
+const ringMat=new THREE.MeshBasicMaterial({color:0x2fd6f5,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+for(const [r0,r1,o] of [[19,19.12,.55],[21.5,21.58,.3],[24,24.08,.18],[16.6,16.65,.25]]){
+  const m=ringMat.clone(); m.opacity=o; const r=new THREE.Mesh(new THREE.RingGeometry(r0,r1,160),m); r.rotation.x=-Math.PI/2; discGroup.add(r);
+}
+{ // tick marks
+  const pts=[]; for(let i=0;i<180;i++){const a=i/180*Math.PI*2, r0=19.2, r1=i%5?19.7:20.5; pts.push(Math.cos(a)*r0,0,Math.sin(a)*r0,Math.cos(a)*r1,0,Math.sin(a)*r1);}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  discGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x2fd6f5,transparent:true,opacity:.45,blending:THREE.AdditiveBlending})));
+}
+const floor=new THREE.Mesh(new THREE.CircleGeometry(19,96),new THREE.MeshBasicMaterial({color:0x0a4a60,transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false}));
+floor.rotation.x=-Math.PI/2; discGroup.add(floor);
+// rotating sweep on disc
+const sweep=new THREE.Mesh(new THREE.CircleGeometry(19,64,0,0.9),new THREE.MeshBasicMaterial({color:0x35e6ff,transparent:true,opacity:.10,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+sweep.rotation.x=-Math.PI/2; discGroup.add(sweep);
+
+/* ---------- run-off flow paths ---------- */
+const paths=[];
+{
+  let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+  for(let k=0;k<46;k++){
+    let x=-W/2+1+rnd()*(W-2), z=-D/2+0.8+rnd()*5.5; const pts=[[x,z]];
+    for(let s=0;s<420;s++){
+      const gxv=gx(x,z), gzv=gz(x,z), m=Math.hypot(gxv,gzv)+1e-6;
+      x-=gxv/m*0.1+ (rnd()-.5)*0.01; z-=gzv/m*0.1;
+      if(Math.abs(x)>W/2||Math.abs(z)>D/2) break;
+      pts.push([x,z]);
+      if(wetAt(x,z)>0.85) break;
+    }
+    if(pts.length>14) paths.push(pts);
+  }
+}
+const lineArr=[]; for(const p of paths){for(let i=0;i<p.length-1;i++){lineArr.push(p[i][0],H(p[i][0],p[i][1])*EX+.06,p[i][1],p[i+1][0],H(p[i+1][0],p[i+1][1])*EX+.06,p[i+1][1]);}}
+const flowGeo=new THREE.BufferGeometry(); flowGeo.setAttribute('position',new THREE.Float32BufferAttribute(lineArr,3));
+const flowLines=new THREE.LineSegments(flowGeo,new THREE.LineBasicMaterial({color:0x4aa8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending}));
+root.add(flowLines);
+const DOTS_PER=7, dotCount=paths.length*DOTS_PER;
+const dotGeo=new THREE.BufferGeometry(); dotGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(dotCount*3),3));
+const dotMat=new THREE.PointsMaterial({color:0x9fe8ff,size:0.32,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true});
+const dots=new THREE.Points(dotGeo,dotMat); dots.frustumCulled=false; root.add(dots);
+
+/* ---------- pond marker ---------- */
+const pondY=H(P1.x,P1.z)*EX+0.08;
+const pondGroup=new THREE.Group(); pondGroup.position.set(P1.x,pondY,P1.z); root.add(pondGroup);
+const pondRings=[]; for(let i=0;i<3;i++){const m=new THREE.MeshBasicMaterial({color:0x6fe0ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}); const r=new THREE.Mesh(new THREE.RingGeometry(0.96,1,96),m); r.rotation.x=-Math.PI/2; pondGroup.add(r); pondRings.push(r);}
+const pondFill=new THREE.Mesh(new THREE.CircleGeometry(1,64),new THREE.MeshBasicMaterial({color:0x2a7bff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}));
+pondFill.rotation.x=-Math.PI/2; pondGroup.add(pondFill);
+const pondBeam=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,6,8,1,true),new THREE.MeshBasicMaterial({color:0x6fe0ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
+pondBeam.position.y=3; pondGroup.add(pondBeam);
+const POND_R=3.0;
+
+/* ---------- panel layout ---------- */
+const MOD_W=2.28, MOD_H=1.13, TILT=THREE.MathUtils.degToRad(12), WATT=0.55;
+const panels=[];
+for(let z=-8.2;z<=8.2;z+=3.0){
+  for(let x=-10.4;x<=10.4;x+=2.4){
+    const w=wetAt(x,z), dp=Math.hypot(x-P1.x,z-P1.z);
+    if(w>0.28||dp<POND_R+1.1||Math.hypot(x-P2.x,z-P2.z)<3.6) continue;
+    if(scoreAt(x,z)<0.38) continue;
+    panels.push({x,z,y:H(x,z)*EX+0.45,s:scoreAt(x,z)});
+  }
+}
+panels.sort((a,b)=>(a.x-b.x)||(a.z-b.z));
+const N=panels.length, KWP=N*WATT, KWH=Math.round(KWP*1500/10)*10;
+const pm=new THREE.InstancedMesh(new THREE.BoxGeometry(MOD_W,0.05,MOD_H),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}),N);
+const col=new THREE.Color();
+panels.forEach((p,i)=>{col.setRGB(0.05+0.15*p.s,0.30+0.35*p.s,0.55+0.1*p.s); pm.setColorAt(i,col);});
+root.add(pm);
+// panel edges + cell lines in one buffer
+const SEG_PER=4+3*2; // outline 4 + 2 cell lines ×... keep simple
+const edgeBase=[];
+{
+  const hw=MOD_W/2, hh=MOD_H/2;
+  const L=(a,b)=>edgeBase.push(...a,...b);
+  const c=[[-hw,0,-hh],[hw,0,-hh],[hw,0,hh],[-hw,0,hh]];
+  for(let i=0;i<4;i++) L(c[i],c[(i+1)%4]);
+  for(const f of[-1/3,1/3]) L([hw*2*f,0,-hh],[hw*2*f,0,hh]);   // cell columns
+  L([-hw,0,0],[hw,0,0]);
+}
+const segV=edgeBase.length/6;                    // segments per panel
+const edgeGeo=new THREE.BufferGeometry();
+const edgePos=new Float32Array(N*segV*6);
+edgeGeo.setAttribute('position',new THREE.BufferAttribute(edgePos,3));
+const edgeMat=new THREE.LineBasicMaterial({color:0xffd27a,transparent:true,opacity:.95,blending:THREE.AdditiveBlending});
+const edges=new THREE.LineSegments(edgeGeo,edgeMat); edges.frustumCulled=false; root.add(edges);
+const dummy=new THREE.Object3D(), v=new THREE.Vector3();
+function placePanels(tp){
+  // tp = time since panels start
+  let shown=0;
+  for(let i=0;i<N;i++){
+    const p=panels[i], t=sm(0,1,(tp-i/N*4.0)/0.9), rise=(1-t)*1.8;
+    dummy.position.set(p.x,p.y+rise,p.z);
+    dummy.rotation.set(TILT,0,0);          // low edge to the south (+z)
+    dummy.scale.set(t||0.0001,t||0.0001,t||0.0001); dummy.updateMatrix(); pm.setMatrixAt(i,dummy.matrix);
+    if(t>0.02) shown++;
+    for(let s=0;s<segV;s++){
+      for(let e=0;e<2;e++){
+        v.set(edgeBase[s*6+e*3],edgeBase[s*6+e*3+1],edgeBase[s*6+e*3+2]).applyMatrix4(dummy.matrix);
+        edgePos.set([v.x,v.y,v.z],(i*segV+s)*6+e*3);
+      }
+    }
+  }
+  pm.instanceMatrix.needsUpdate=true; edgeGeo.attributes.position.needsUpdate=true; return shown;
+}
+
+/* ---------- dust ---------- */
+const dustN=380, dustArr=new Float32Array(dustN*3);
+{let s=3;const r=()=>{s=(s*16807)%2147483647;return s/2147483647}; for(let i=0;i<dustN;i++){const a=r()*6.283,rad=Math.sqrt(r())*22; dustArr[i*3]=Math.cos(a)*rad;dustArr[i*3+1]=r()*14-2;dustArr[i*3+2]=Math.sin(a)*rad;}}
+const dustGeo=new THREE.BufferGeometry(); dustGeo.setAttribute('position',new THREE.BufferAttribute(dustArr,3));
+const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0x6fdcff,size:0.07,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));
+scene.add(dust);
+
+/* ---------- HUD ---------- */
+const $=id=>document.getElementById(id);
+const caps=[
+ [0,'01 / SCAN','Reading the land','Elevation grid built from the survey: every metre of the plot, height exaggerated so slopes are easy to see.'],
+ [4.5,'02 / WATER','Where the water goes','Run-off follows the slope and gathers in the low ground. Blue = wet zones that panels should avoid.'],
+ [12,'03 / POND','Best farm-pond spot','The deepest catchment on the plot: it holds water, so it earns its place as the pond.'],
+ [16.5,'04 / SOLAR SCORE','Solar score per square metre','Amber = strong, red = weak. South-facing, dry, un-shaded ground scores highest.'],
+ [22,'05 / LAYOUT','Panels go where they pay','Only dry, high-score ground gets panels. kWp and yearly energy update as the layout builds.'],
+ [29,'06 / REPORT','See the land. Build it right. Keep it earning.','Site report under the installer’s brand, then daily monitoring of every string.']
+];
+let lastCap=-1;
+function setCap(t){let k=0;for(let i=0;i<caps.length;i++) if(t>=caps[i][0]) k=i; if(k!==lastCap){lastCap=k;$('cStep').textContent=caps[k][1];$('cTitle').textContent=caps[k][2];$('cText').textContent=caps[k][3];}}
+function project(vec,el,vis){
+  v.copy(vec).project(camera);
+  const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight;
+  el.style.transform=`translate(${x}px,${y-14}px) translate(-50%,-100%)`; el.style.opacity=(v.z<1?vis:0);
+}
+const fmt=n=>n.toLocaleString('en-IN');
+
+/* ---------- frame ---------- */
+const pending=[];
+function frame(t){
+  t=((t%DUR)+DUR)%DUR;
+  setCap(t);
+  // terrain scan + modes
+  terrainMat.uniforms.uTime.value=t;
+  terrainMat.uniforms.uScan.value=mix(-W/2-1,W/2+1.5,sm(0,4.2,t));
+  terrainMat.uniforms.uWet.value=sm(4.5,6.5,t)*(1-0.0);
+  terrainMat.uniforms.uMode.value=sm(16.5,18.5,t)*(1-sm(31.2,33,t)*0);
+  // water
+  const wv=sm(4.5,6,t);
+  flowLines.material.opacity=0.35*wv*(1-sm(16,17.5,t)*0.7);
+  dotMat.opacity=0.95*wv*(1-sm(16,17.5,t));
+  const dp=dotGeo.attributes.position.array;
+  let di=0;
+  for(let k=0;k<paths.length;k++){
+    const p=paths[k], L=p.length-1;
+    for(let j=0;j<DOTS_PER;j++){
+      const u=((t*0.16+ j/DOTS_PER + k*0.137)%1)*L, i0=Math.floor(u), f=u-i0, a=p[i0], b=p[Math.min(i0+1,L)];
+      const x=mix(a[0],b[0],f), z=mix(a[1],b[1],f);
+      dp[di++]=x; dp[di++]=H(x,z)*EX+0.1; dp[di++]=z;
+    }
+  }
+  dotGeo.attributes.position.needsUpdate=true;
+  // pond
+  const pv=sm(11.4,12.6,t)*(1-sm(21,23,t)*0.55);
+  pondFill.material.opacity=0.22*pv; pondBeam.material.opacity=0.55*pv*(1-sm(16,17,t));
+  pondRings.forEach((r,i)=>{const ph=((t*0.5+i/3)%1); r.scale.setScalar(POND_R*(0.35+0.85*ph)); r.material.opacity=pv*(1-ph)*0.9;});
+  pondFill.scale.setScalar(POND_R*0.82);
+  // size-range ghosts
+  ghostMat.opacity=0.8*sm(25.5,27,t);
+  // panels
+  const shown=placePanels(Math.max(-1,t-22.2));
+  pm.visible=edges.visible=t>22.1; 
+  // sweep + disc
+  sweep.rotation.z=-t*1.1; discGroup.rotation.y=t*0.02;
+  dust.rotation.y=t*0.015;
+  // camera orbit
+  const k=t/DUR, az=mix(0.55,3.7,k)+0.0, rad=mix(46,38,sm(0,1,k))+Math.sin(k*6.283)*1.5, el=mix(0.62,0.5,sm(0.2,0.8,k))+0.06*Math.sin(k*12.566);
+  const tx=0,ty=-1.4,tz=0;
+  camera.position.set(tx+rad*Math.cos(el)*Math.sin(az),ty+rad*Math.sin(el),tz+rad*Math.cos(el)*Math.cos(az));
+  camera.lookAt(tx,ty,tz);
+  camera.updateMatrixWorld();
+  // labels
+  project(new THREE.Vector3(P1.x,pondY+0.6,P1.z),$('lPond'),sm(12,13,t)*(1-sm(16,17,t)));
+  project(new THREE.Vector3(P2.x,H(P2.x,P2.z)*EX+0.4,P2.z),$('lWet'),sm(7.5,8.5,t)*(1-sm(11.5,12.5,t)));
+  project(new THREE.Vector3(-3.5,H(-3.5,-1)*EX+0.5,-1),$('lSun'),sm(18.5,19.5,t)*(1-sm(22,23,t)));
+  // stats card
+  const sv=sm(22.5,24,t); $('stats').style.opacity=sv;
+  const frac=clamp(shown/N);
+  $('sPanels').innerHTML=shown+'<i>of '+N+'</i>';
+  $('sKwp').innerHTML=(shown*WATT).toFixed(1)+'<i>kWp</i>';
+  $('sKwh').innerHTML=fmt(Math.round(KWH*frac/10)*10)+'<i>kWh/yr</i>';
+  const r0=(KWP*4800/5400), r1=(KWP*6000/5400);
+  $('sRange').textContent=sm(25.5,27,t)>0.3?`${r0.toFixed(0)} – ${r1.toFixed(0)} kWp`:'—';
+  $('tl').style.width=(t/DUR*100)+'%';
+  composer.render();
+}
+window.__stats={N,KWP,KWH};
+if(RECORD){
+  window.__recordFrame=t=>frame(t);
+  frame(0); window.__ready=true;
+}else{
+  const t0=performance.now();
+  (function loop(){frame((performance.now()-t0)/1000);requestAnimationFrame(loop)})();
+  window.__ready=true;
+}
+</script>
+</body>
+</html>
