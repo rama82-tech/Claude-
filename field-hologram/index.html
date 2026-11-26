@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Water and Solar Hologram</title>
+<style>
+:root{--bg:#03070d;--ink:#bff6ff;--dim:#6fa6b3;--cyan:#33e6ff;--amber:#ffb547;--blue:#4d8dff;--green:#9dff5a;--panel:rgba(6,22,32,.72);--line:rgba(80,220,255,.28)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#03070d}}
+:root[data-theme="dark"]{--bg:#03070d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:12px/1.4 "JetBrains Mono","DejaVu Sans Mono",ui-monospace,Menlo,Consolas,monospace}
+canvas#c{display:block;width:100vw;height:100vh}
+.box{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:8px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#stats{left:16px;top:16px;width:290px;padding:12px 14px;max-height:calc(100vh - 32px);overflow:auto}
+#stats h1{margin:0;font-size:14px;letter-spacing:2px;color:var(--cyan)}
+#stats .sub{color:var(--dim);margin-bottom:6px}
+#stats h2{font-size:11px;letter-spacing:1.5px;color:var(--amber);margin:10px 0 3px;font-weight:600}
+#stats h2.w{color:#7fb2ff}#stats h2.s{color:var(--green)}
+.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(80,220,255,.10);padding:2px 0}
+.row span:first-child{color:var(--dim)} .row span:last-child{color:var(--ink);font-weight:600;text-align:right}
+#probe{right:16px;top:16px;width:270px;padding:10px 12px}
+#probe .t{color:var(--amber);letter-spacing:1.5px;font-size:11px}
+#probe .v{margin-top:4px;white-space:pre-line}
+#probe .verdict{margin-top:6px;font-weight:700}
+#bar{left:50%;bottom:14px;transform:translateX(-50%);padding:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;max-width:calc(100vw - 32px)}
+button,label.btn{font:inherit;color:var(--ink);background:rgba(51,230,255,.06);border:1px solid var(--line);border-radius:5px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+button:hover,label.btn:hover{background:rgba(51,230,255,.14)}
+button.on{background:rgba(51,230,255,.22);border-color:var(--cyan);color:#fff}
+button.on.water{background:rgba(77,141,255,.3);border-color:var(--blue)}
+button.on.solar{background:rgba(157,255,90,.18);border-color:var(--green)}
+button.on.panels{background:rgba(255,181,71,.2);border-color:var(--amber)}
+.sl{display:flex;gap:6px;align-items:center;color:var(--dim);padding:0 6px}
+input[type=range]{accent-color:var(--cyan);width:110px}
+#legend{right:16px;bottom:16px;padding:8px 10px;width:270px}
+#legend .bar{height:8px;border-radius:4px;margin:5px 0 2px}
+#legend .ends{display:flex;justify-content:space-between;color:var(--dim)}
+#note{position:fixed;right:16px;top:150px;width:270px;color:var(--dim);font-size:10px;text-align:right}
+.lab{position:fixed;transform:translate(-50%,-100%);pointer-events:none;font-size:10px;letter-spacing:1.5px;white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.9);transition:opacity .4s}
+.lab.c{color:var(--amber);font-size:13px;font-weight:700}
+.lab.w{color:#9cc4ff}.lab.s{color:var(--green)}.lab.r{color:var(--amber)}
+#title{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .8s;text-align:center}
+#title.show{opacity:1}
+#title .a{font-size:30px;letter-spacing:6px;color:var(--cyan);text-shadow:0 0 18px rgba(51,230,255,.6)}
+#title .b{font-size:14px;letter-spacing:3px;color:var(--amber);margin-top:8px}
+#caption{position:fixed;left:50%;top:22px;transform:translateX(-50%);font-size:15px;letter-spacing:2px;color:#fff;padding:8px 16px;opacity:0;transition:opacity .6s;text-shadow:0 0 10px rgba(51,230,255,.8)}
+#caption.show{opacity:1}
+body.capture #bar{display:none} body.capture .lab{transition:none}
+@media (max-width:760px){#stats{width:calc(100vw - 32px);max-height:34vh}#probe,#legend,#note{display:none}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="stats" class="box"></div>
+<div id="probe" class="box"><div class="t">PROBE</div><div class="v" id="probeV">Move the cursor over the field</div><div class="verdict" id="probeVerdict"></div></div>
+<div id="legend" class="box"></div>
+<div id="note">Illustrative model. Elevation is synthetic, not survey data, until you load your own. Vertical scale exaggerated.<br>Shows surface water only, not groundwater.</div>
+<div id="labels"></div>
+<div id="title"><div><div class="a">FIELD HOLOGRAM</div><div class="b">WHERE THE WATER GOES · WHERE THE PANELS GO</div></div></div>
+<div id="caption" class="box"></div>
+<div id="bar" class="box">
+  <button id="bRot">Auto-rotate</button>
+  <button id="bCon" class="on">Contours</button>
+  <button id="bWater" class="water">Water</button>
+  <button id="bSolar" class="solar">Solar</button>
+  <button id="bPanels" class="panels">Panels</button>
+  <button id="bTop">Top view</button>
+  <button id="bReset">Reset view</button>
+  <label class="btn" title="CSV grid of elevations in metres">Load field data<input id="file" type="file" accept=".csv,.txt" hidden></label>
+  <span class="sl">Vertical × <input id="vex" type="range" min="1" max="6" step="0.1" value="3"><b id="vexV">3.0</b></span>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const CAPTURE = new URLSearchParams(location.search).has('capture');
+if (CAPTURE) document.body.classList.add('capture');
+
+/* =========================================================
+   FIELD MODEL  (1 cell = 1 grid step; x → east, z → south)
+   ========================================================= */
+const LAT = 9.9;                 // Madurai, Tamil Nadu (sun is to the south most of the year)
+const MODULE = {w:1.134, h:2.278, wp:550};   // one 550 Wp panel (portrait)
+const TABLE = {cols:4};                      // 4 panels side by side per table
+const TILT = 10;                             // degrees, facing south
+const YIELD = 1500;                          // kWh per kWp per year (estimate for Madurai)
+
+let F = null; // current field
+
+function rng(seed){ let a=seed>>>0; return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function noise2(seed){ const r=rng(seed), S=64, g=new Float32Array(S*S); for(let i=0;i<g.length;i++) g[i]=r()*2-1;
+  const sm=t=>t*t*(3-2*t);
+  const n=(x,y)=>{ const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi, a=((xi%S)+S)%S, b=((yi%S)+S)%S, a1=(a+1)%S, b1=(b+1)%S;
+    const u=sm(xf), v=sm(yf); const p=g[b*S+a], q=g[b*S+a1], s=g[b1*S+a], t=g[b1*S+a1]; return p+(q-p)*u+(s-p)*v+(p-q-s+t)*u*v; };
+  return (x,y,o=4)=>{ let f=0,amp=1,tot=0; for(let i=0;i<o;i++){ f+=amp*n(x,y); tot+=amp; x*=2.02; y*=2.02; amp*=0.5; } return f/tot; };
+}
+
+// Demo field: 100 m × 100 m, 1 m grid, elevations ~108–116 m
+function demoField(){
+  const N=101, size=100, h=new Float32Array(N*N), fb=noise2(7);
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){
+    const x=i/(N-1), z=j/(N-1);
+    let e = 112 + 2.4*fb(x*2.2+3, z*2.2+1, 4) + 0.35*fb(x*5+11, z*5+7, 3);
+    e += (0.5-z)*2.2 + (x-0.5)*0.8;                                   // gentle fall to the south, rise to the east
+    e += 2.4*Math.exp(-((x-0.82)**2+(z-0.12)**2)/0.02);               // knoll in the north-east
+    e -= 2.8*Math.exp(-((x-0.30)**2+(z-0.30)**2)/0.008);              // natural hollow (pond) in the north-west
+    e -= 1.0*Math.exp(-((x-0.22)**2)/0.004) * (0.3+0.7*z);           // shallow drainage line on the west side
+    h[j*N+i]=e;
+  }
+  return {N, size, h, name:'PARCEL BL-100', sub:'Demo field · 100 m × 100 m', demo:true};
+}
+
+// Road: a curved access track across the field (polyline in metres)
+function demoRoad(size){ const pts=[]; for(let k=0;k<=40;k++){ const t=k/40; pts.push([t*size, size*(0.46+0.10*Math.sin(t*Math.PI*1.3+0.4)-0.06*t)]); } return pts; }
+
+/* ---------- analysis: hydrology + solar ---------- */
+function analyse(f){
+  const {N,size,h}=f, cs=size/(N-1), A=cs*cs, idx=(i,j)=>j*N+i;
+  // 1) priority-flood fill → depressions (where water ponds)
+  const filled=new Float32Array(h), done=new Uint8Array(N*N);
+  const heap=[]; const push=(k,v)=>{ heap.push([v,k]); let c=heap.length-1; while(c>0){ const p=(c-1)>>1; if(heap[p][0]<=heap[c][0]) break; [heap[p],heap[c]]=[heap[c],heap[p]]; c=p; } };
+  const pop=()=>{ const top=heap[0], last=heap.pop(); if(heap.length){ heap[0]=last; let c=0; for(;;){ const l=2*c+1, r=l+1; let m=c; if(l<heap.length&&heap[l][0]<heap[m][0]) m=l; if(r<heap.length&&heap[r][0]<heap[m][0]) m=r; if(m===c) break; [heap[m],heap[c]]=[heap[c],heap[m]]; c=m; } } return top; };
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++) if(i===0||j===0||i===N-1||j===N-1){ done[idx(i,j)]=1; push(idx(i,j),h[idx(i,j)]); }
+  const D8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+  while(heap.length){ const [v,k]=pop(); const i=k%N, j=(k/N)|0;
+    for(const [di,dj] of D8){ const a=i+di, b=j+dj; if(a<0||b<0||a>=N||b>=N) continue; const q=idx(a,b); if(done[q]) continue; done[q]=1; filled[q]=Math.max(h[q], v+1e-5); push(q,filled[q]); } }
+  const depth=new Float32Array(N*N); for(let k=0;k<N*N;k++) depth[k]=Math.max(0,filled[k]-h[k]-1e-3);
+  // 2) D8 flow direction + accumulation on the filled surface
+  const down=new Int32Array(N*N).fill(-1);
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const k=idx(i,j); let best=0, bk=-1;
+    for(const [di,dj] of D8){ const a=i+di, b=j+dj; if(a<0||b<0||a>=N||b>=N) continue; const q=idx(a,b); const d=(filled[k]-filled[q])/(Math.hypot(di,dj)*cs); if(d>best){ best=d; bk=q; } }
+    down[k]=bk; }
+  const order=[...Array(N*N).keys()].sort((a,b)=>filled[b]-filled[a]);
+  const acc=new Float32Array(N*N).fill(1); for(const k of order){ if(down[k]>=0) acc[down[k]]+=acc[k]; }
+  // 3) slope, aspect, wetness index
+  const slope=new Float32Array(N*N), aspect=new Float32Array(N*N), twi=new Float32Array(N*N);
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const k=idx(i,j);
+    const hx=(h[idx(Math.min(N-1,i+1),j)]-h[idx(Math.max(0,i-1),j)])/((Math.min(N-1,i+1)-Math.max(0,i-1))*cs);
+    const hz=(h[idx(i,Math.min(N-1,j+1))]-h[idx(i,Math.max(0,j-1))])/((Math.min(N-1,j+1)-Math.max(0,j-1))*cs);
+    const g=Math.hypot(hx,hz); slope[k]=g*100;                          // percent
+    aspect[k]=(Math.atan2(-hx, hz)*180/Math.PI+360)%360;                 // compass bearing the slope faces (0 = N, 180 = S)
+    twi[k]=Math.log(acc[k]*A/Math.max(g,0.005)); }
+  // wetness 0..1 from TWI percentiles
+  const sorted=[...twi].sort((a,b)=>a-b), lo=sorted[Math.floor(N*N*0.5)], hi=sorted[Math.floor(N*N*0.985)];
+  const wet=new Float32Array(N*N); for(let k=0;k<N*N;k++) wet[k]=Math.min(1,Math.max(0,(twi[k]-lo)/(hi-lo))) ;
+  for(let k=0;k<N*N;k++) if(depth[k]>0.05) wet[k]=1;
+  // 4) features: road, trees
+  const road=f.road||[], roadD=new Float32Array(N*N).fill(1e9);
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const x=i*cs, z=j*cs; let m=1e9; for(let s=0;s<road.length-1;s++){ m=Math.min(m,segDist(x,z,road[s],road[s+1])); } roadD[idx(i,j)]=m; }
+  if(!f.trees) f.trees=placeTrees(f, slope, depth, roadD);
+  // 5) solar suitability 0..100 with reason
+  const solar=new Float32Array(N*N), why=new Array(N*N);
+  const pondD=distanceTo(N,cs,k=>depth[k]>0.05);
+  const treeD=new Float32Array(N*N).fill(1e9), shade=new Float32Array(N*N);
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const x=i*cs, z=j*cs; let m=1e9, sh=0;
+    for(const t of f.trees){ const dx=x-t.x, dz=z-t.z, d=Math.hypot(dx,dz); m=Math.min(m,d);
+      // sun is to the south (and low east/west in morning/evening): trees south of a spot shade it
+      if(t.z>z && d<t.h*2.2){ sh=Math.max(sh, 1-d/(t.h*2.2)); }
+      if(Math.abs(dz)<t.h*0.6 && Math.abs(dx)<t.h*2.5){ sh=Math.max(sh, 0.6*(1-Math.abs(dx)/(t.h*2.5))); } }
+    treeD[idx(i,j)]=m; shade[idx(i,j)]=sh; }
+  let suitable=0;
+  for(let k=0;k<N*N;k++){
+    let s=100, r='Good: flat, open, dry ground';
+    const sl=slope[k];
+    if(sl>7){ s-= (sl-7)*5; r='Slope '+sl.toFixed(1)+'%: needs levelling or taller mounts'; }
+    const northness=Math.cos(aspect[k]*Math.PI/180);           // +1 = faces north
+    if(sl>2 && northness>0.3){ s-= northness*Math.min(1,sl/8)*25; if(s<80) r='Faces north: loses some sun'; }
+    if(shade[k]>0.05){ s-= shade[k]*70; if(shade[k]>0.25) r='Shaded by trees'; }
+    if(wet[k]>0.55){ s-= (wet[k]-0.55)*180; r='Water collects here'; }
+    if(pondD[k]<8){ s=Math.min(s, pondD[k]*4); r='Pond or too close to water'; }
+    if(roadD[k]<4){ s=Math.min(s,10); r='On or next to the access road'; }
+    if(treeD[k]<2.5){ s=Math.min(s,5); r='Tree'; }
+    s=Math.max(0,Math.min(100,s)); solar[k]=s; why[k]=r; if(s>=70) suitable++;
+  }
+  // 6) best spot for a new farm pond: where most water arrives, outside the existing pond and road
+  let best=-1, bv=0; for(let k=0;k<N*N;k++){ if(depth[k]>0.05||roadD[k]<6||pondD[k]<12) continue; const i=k%N, j=(k/N)|0; if(i<4||j<4||i>N-5||j>N-5) continue; if(acc[k]>bv){ bv=acc[k]; best=k; } }
+  // 7) streams for drawing
+  const streams=traceStreams(N,cs,acc,down,depth, Math.max(60, N*N*0.006));
+  Object.assign(f,{cs,filled,depth,acc,down,slope,aspect,wet,solar,why,roadD,treeD,shade,pondD,suitable,newPond:best,newPondCatch:bv*A,streams});
+  layoutPanels(f);
+  return f;
+}
+function segDist(x,z,a,b){ const vx=b[0]-a[0], vz=b[1]-a[1], wx=x-a[0], wz=z-a[1]; const t=Math.max(0,Math.min(1,(wx*vx+wz*vz)/(vx*vx+vz*vz||1))); return Math.hypot(wx-t*vx, wz-t*vz); }
+function distanceTo(N,cs,pred){ // brute-force-free two-pass chamfer distance
+  const d=new Float32Array(N*N).fill(1e9); for(let k=0;k<N*N;k++) if(pred(k)) d[k]=0;
+  const a=cs, b=cs*Math.SQRT2;
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const k=j*N+i; if(i>0) d[k]=Math.min(d[k],d[k-1]+a); if(j>0){ d[k]=Math.min(d[k],d[k-N]+a); if(i>0) d[k]=Math.min(d[k],d[k-N-1]+b); if(i<N-1) d[k]=Math.min(d[k],d[k-N+1]+b); } }
+  for(let j=N-1;j>=0;j--) for(let i=N-1;i>=0;i--){ const k=j*N+i; if(i<N-1) d[k]=Math.min(d[k],d[k+1]+a); if(j<N-1){ d[k]=Math.min(d[k],d[k+N]+a); if(i<N-1) d[k]=Math.min(d[k],d[k+N+1]+b); if(i>0) d[k]=Math.min(d[k],d[k+N-1]+b); } }
+  return d;
+}
+function placeTrees(f, slope, depth, roadD){
+  const {N,size}=f, cs=size/(N-1), r=rng(21), trees=[];
+  if(!f.demo) return trees;
+  const clusters=[[0.08,0.2,9],[0.12,0.75,10],[0.62,0.86,9],[0.9,0.55,8],[0.78,0.08,8],[0.4,0.62,6],[0.95,0.92,5],[0.05,0.5,5]];
+  for(const [cx,cz,n] of clusters) for(let t=0;t<n;t++){ const x=(cx+(r()-0.5)*0.12)*size, z=(cz+(r()-0.5)*0.12)*size; const i=Math.round(x/cs), j=Math.round(z/cs);
+    if(i<1||j<1||i>N-2||j>N-2) continue; const k=j*N+i; if(depth[k]>0.05||roadD[k]<4) continue; trees.push({x,z,h:6+r()*4}); }
+  return trees;
+}
+function traceStreams(N,cs,acc,down,depth,thr){
+  const isStream=k=>acc[k]>=thr; const lines=[]; const seen=new Uint8Array(N*N);
+  // start points: stream cells with no upstream stream cell
+  const hasUp=new Uint8Array(N*N); for(let k=0;k<N*N;k++) if(isStream(k)&&down[k]>=0) hasUp[down[k]]=1;
+  for(let k=0;k<N*N;k++){ if(!isStream(k)||hasUp[k]) continue; const pts=[]; let c=k, guard=0;
+    while(c>=0 && guard++<4000){ pts.push(c); if(seen[c]) break; seen[c]=1; if(depth[c]>0.05) break; c=down[c]; }
+    if(pts.length>4) lines.push(pts); }
+  return lines;
+}
+function layoutPanels(f){
+  const {N,cs,solar,size}=f, tw=MODULE.w*TABLE.cols, td=MODULE.h*Math.cos(TILT*Math.PI/180);
+  const rowPitch=td+2.0;            // gap so rows don't shade each other (low winter sun is to the south)
+  const used=[], tables=[]; const ok=(x0,z0)=>{ for(let z=z0; z<=z0+td+1e-6; z+=cs*0.5) for(let x=x0; x<=x0+tw+1e-6; x+=cs*0.5){ const i=Math.round(x/cs), j=Math.round(z/cs); if(i<0||j<0||i>=N||j>=N) return false; if(solar[j*N+i]<70) return false; } return true; };
+  for(let z=1; z+td<size-1; z+=rowPitch){ for(let x=1; x+tw<size-1;){ if(ok(x,z)){ tables.push({x:x+tw/2, z:z+td/2}); x+=tw+0.4; } else x+=0.5; } }
+  f.tables=tables; f.kWp=tables.length*TABLE.cols*MODULE.wp/1000; f.kWh=f.kWp*YIELD;
+}
+
+/* =========================================================
+   RENDERING
+   ========================================================= */
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas, antialias:true, preserveDrawingBuffer:CAPTURE});
+renderer.setPixelRatio(CAPTURE?1:Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight);
+const scene=new THREE.Scene(); scene.background=new THREE.Color('#03070d');
+const camera=new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.5, 3000);
+const controls=new OrbitControls(camera, canvas); controls.enableDamping=true; controls.maxPolarAngle=Math.PI*0.49; controls.minDistance=40; controls.maxDistance=400;
+
+// starfield + rings (hologram stage)
+(function stage(){
+  const g=new THREE.BufferGeometry(), n=1500, p=new Float32Array(n*3), r=rng(3);
+  for(let i=0;i<n;i++){ const a=r()*Math.PI*2, b=Math.acos(2*r()-1), d=500+r()*700; p.set([Math.sin(b)*Math.cos(a)*d, Math.cos(b)*d*0.6, Math.sin(b)*Math.sin(a)*d],i*3); }
+  g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:'#5fd8ff',size:1.6,sizeAttenuation:false,transparent:true,opacity:0.55})));
+  for (const [rad,op] of [[95,0.35],[110,0.18],[140,0.1]]){ const ring=new THREE.Mesh(new THREE.RingGeometry(rad,rad+0.4,160),new THREE.MeshBasicMaterial({color:'#33e6ff',transparent:true,opacity:op,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false})); ring.rotation.x=-Math.PI/2; ring.position.y=-6; scene.add(ring); }
+})();
+
+const fieldG=new THREE.Group(); scene.add(fieldG);
+const uniforms={ uTime:{value:0}, uContours:{value:1}, uWater:{value:0}, uSolar:{value:0}, uMin:{value:0}, uSize:{value:100} };
+const terrainMat=new THREE.ShaderMaterial({ uniforms, transparent:true, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending, extensions:{},
+  vertexShader:`attribute float aH; attribute float aWet; attribute float aSolar; attribute float aRoad;
+    varying float vH; varying float vWet; varying float vSolar; varying float vRoad; varying vec2 vXZ; varying vec3 vN; varying vec3 vView;
+    void main(){ vH=aH; vWet=aWet; vSolar=aSolar; vRoad=aRoad; vXZ=position.xz; vN=normalize(normalMatrix*normal);
+      vec4 mv=modelViewMatrix*vec4(position,1.); vView=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader:`uniform float uTime,uContours,uWater,uSolar,uSize;
+    varying float vH; varying float vWet; varying float vSolar; varying float vRoad; varying vec2 vXZ; varying vec3 vN; varying vec3 vView;
+    float lineAA(float v, float w){ float d=abs(fract(v-0.5)-0.5)/fwidth(v); return 1.-clamp(d/w,0.,1.); }
+    void main(){
+      vec3 cyan=vec3(0.2,0.9,1.0);
+      float fres=pow(1.-abs(dot(vN,vView)),2.);
+      vec3 col=cyan*(0.10+0.25*fres);
+      float grid=max(lineAA(vXZ.x/10.,0.8),lineAA(vXZ.y/10.,0.8));
+      col+=cyan*grid*0.22;
+      float minor=lineAA(vH/0.5,1.0), major=lineAA(vH/2.5,1.4);
+      col+=uContours*(cyan*minor*0.35+vec3(0.85,1.,1.)*major*0.75);
+      // road
+      col=mix(col, vec3(1.0,0.75,0.35)*0.75, vRoad*0.85);
+      // water layer: wetness + moving shimmer
+      float w=smoothstep(0.35,1.0,vWet);
+      vec3 water=vec3(0.25,0.5,1.0)*(0.35+0.65*w)*(0.85+0.15*sin(uTime*2.+vXZ.x*0.3+vXZ.y*0.2));
+      col=mix(col, col*0.6+water, uWater*w);
+      // solar layer: red (no) → amber → green (best)
+      float s=vSolar/100.;
+      vec3 sc= s<0.5 ? mix(vec3(0.9,0.15,0.12),vec3(1.0,0.65,0.15),s*2.) : mix(vec3(1.0,0.65,0.15),vec3(0.55,1.0,0.3),(s-.5)*2.);
+      col=mix(col, col*0.5+sc*(0.25+0.55*s), uSolar*0.9);
+      gl_FragColor=vec4(col, 0.92);
+    }` });
+const wallMat=new THREE.ShaderMaterial({ transparent:true, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending,
+  vertexShader:`varying float vY; attribute float aT; void main(){ vY=aT; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`varying float vY; void main(){ gl_FragColor=vec4(vec3(0.2,0.9,1.0)*(0.08+0.6*pow(vY,3.)),1.); }` });
+const streamMat=new THREE.ShaderMaterial({ uniforms, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  vertexShader:`varying float vU; void main(){ vU=uv.x; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`uniform float uTime,uWater; varying float vU; void main(){ float p=fract(vU*6.-uTime*0.8); float pulse=smoothstep(0.,0.15,p)*smoothstep(0.6,0.15,p);
+    gl_FragColor=vec4(vec3(0.35,0.65,1.0)*(0.35+1.4*pulse)*uWater,1.); }` });
+const pondMat=new THREE.ShaderMaterial({ uniforms, transparent:true, depthWrite:false, side:THREE.DoubleSide, blending:THREE.AdditiveBlending,
+  vertexShader:`varying vec2 vP; void main(){ vP=position.xz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`uniform float uTime; varying vec2 vP; void main(){ float r=sin(length(vP-vec2(30.,30.))*1.2-uTime*2.)*0.5+0.5; gl_FragColor=vec4(vec3(0.2,0.45,1.0)*(0.45+0.35*r),1.); }` });
+const treeMat=new THREE.MeshBasicMaterial({color:'#dff8ff', wireframe:true, transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false});
+const panelMat=new THREE.MeshBasicMaterial({color:'#ffc35c', transparent:true, opacity:0.8, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide});
+const panelEdgeMat=new THREE.LineBasicMaterial({color:'#ffe2a8', transparent:true, opacity:0.9, blending:THREE.AdditiveBlending});
+const markerMat=new THREE.MeshBasicMaterial({color:'#7fb2ff', transparent:true, opacity:0.8, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide});
+
+let vex=3, terrain=null, layers={contours:true, water:false, solar:false, panels:false};
+const objs={};
+function Y(h){ return (h-F.hmin)*vex; }
+function heightAt(x,z){ const {N,cs,h}=F; const fx=Math.min(N-1.001,Math.max(0,x/cs)), fz=Math.min(N-1.001,Math.max(0,z/cs)); const i=Math.floor(fx), j=Math.floor(fz), u=fx-i, v=fz-j;
+  const a=h[j*N+i], b=h[j*N+i+1], c=h[(j+1)*N+i], d=h[(j+1)*N+i+1]; return a*(1-u)*(1-v)+b*u*(1-v)+c*(1-u)*v+d*u*v; }
+
+function build(){
+  fieldG.clear(); for (const k in objs) delete objs[k];
+  const {N,size,h,cs}=F; const half=size/2;
+  fieldG.position.set(-half, 0, -half);
+  // terrain
+  const g=new THREE.PlaneGeometry(size,size,N-1,N-1); g.rotateX(-Math.PI/2); g.translate(half,0,half);
+  const pos=g.attributes.position, aH=new Float32Array(N*N), aWet=new Float32Array(N*N), aSol=new Float32Array(N*N), aRoad=new Float32Array(N*N);
+  for(let k=0;k<N*N;k++){ const i=Math.round(pos.getX(k)/cs), j=Math.round(pos.getZ(k)/cs), q=j*N+i; pos.setY(k, Y(h[q])); aH[k]=h[q]; aWet[k]=F.wet[q]; aSol[k]=F.solar[q]; aRoad[k]=Math.max(0,1-Math.max(0,F.roadD[q]-1.6)/1.2); }
+  g.setAttribute('aH',new THREE.BufferAttribute(aH,1)); g.setAttribute('aWet',new THREE.BufferAttribute(aWet,1)); g.setAttribute('aSolar',new THREE.BufferAttribute(aSol,1)); g.setAttribute('aRoad',new THREE.BufferAttribute(aRoad,1));
+  g.computeVertexNormals(); terrain=new THREE.Mesh(g,terrainMat); fieldG.add(terrain);
+  // side walls
+  const base=-4, wp=[], wt=[];
+  const edge=(pts)=>{ for(let s=0;s<pts.length-1;s++){ const [x0,z0]=pts[s], [x1,z1]=pts[s+1]; const y0=Y(heightAt(x0,z0)), y1=Y(heightAt(x1,z1));
+    wp.push(x0,base,z0, x1,base,z1, x1,y1,z1,  x0,base,z0, x1,y1,z1, x0,y0,z0); wt.push(0,0,1, 0,1,1); } };
+  const line=(ax,az,bx,bz)=>{ const pts=[]; for(let s=0;s<=N-1;s++){ const t=s/(N-1); pts.push([ax+(bx-ax)*t, az+(bz-az)*t]); } return pts; };
+  edge(line(0,0,size,0)); edge(line(size,0,size,size)); edge(line(size,size,0,size)); edge(line(0,size,0,0));
+  const wg=new THREE.BufferGeometry(); wg.setAttribute('position',new THREE.Float32BufferAttribute(wp,3)); wg.setAttribute('aT',new THREE.Float32BufferAttribute(wt,1)); fieldG.add(new THREE.Mesh(wg,wallMat));
+  // trees (instanced wireframe cones)
+  if (F.trees.length){ const cone=new THREE.ConeGeometry(1,1,6,1,true); cone.translate(0,0.5,0); const im=new THREE.InstancedMesh(cone,treeMat,F.trees.length); const m=new THREE.Matrix4();
+    F.trees.forEach((t,i)=>{ m.compose(new THREE.Vector3(t.x,Y(heightAt(t.x,t.z)),t.z), new THREE.Quaternion(), new THREE.Vector3(t.h*0.22,t.h*1.0,t.h*0.22)); im.setMatrixAt(i,m); }); fieldG.add(im); }
+  // ponds (existing water)
+  const pp=[]; for(let j=0;j<N-1;j++) for(let i=0;i<N-1;i++){ const k=j*N+i; if(F.depth[k]>0.05){ const y=Y(F.filled[k])+0.05, x=i*cs, z=j*cs; pp.push(x,y,z, x+cs,y,z, x+cs,y,z+cs, x,y,z, x+cs,y,z+cs, x,y,z+cs); } }
+  if (pp.length){ const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3)); objs.pond=new THREE.Mesh(pg,pondMat); fieldG.add(objs.pond); }
+  // streams (animated flow tubes)
+  objs.streams=new THREE.Group(); fieldG.add(objs.streams);
+  for (const s of F.streams){ const pts=s.map(k=>{ const i=k%N, j=(k/N)|0; return new THREE.Vector3(i*cs, Y(F.h[k])+0.35, j*cs); });
+    if (pts.length<3) continue; const curve=new THREE.CatmullRomCurve3(pts); const tube=new THREE.TubeGeometry(curve, Math.min(400,pts.length*2), 0.28+Math.min(0.5,Math.log10(F.acc[s[s.length-1]])*0.1), 5, false);
+    objs.streams.add(new THREE.Mesh(tube,streamMat)); }
+  // suggested new farm pond marker
+  objs.marker=new THREE.Group(); fieldG.add(objs.marker);
+  if (F.newPond>=0){ const i=F.newPond%N, j=(F.newPond/N)|0, x=i*cs, z=j*cs, y=Y(F.h[F.newPond]);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(3.2,3.8,48),markerMat); ring.rotation.x=-Math.PI/2; ring.position.set(x,y+0.4,z); objs.marker.add(ring);
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,14,8,1,true),markerMat); beam.position.set(x,y+7,z); objs.marker.add(beam); objs.marker.userData.pos=new THREE.Vector3(x,y+14,z); }
+  // solar tables
+  objs.panels=new THREE.Group(); fieldG.add(objs.panels);
+  if (F.tables.length){ const tw=MODULE.w*TABLE.cols, tdep=MODULE.h;
+    const pg=new THREE.PlaneGeometry(tw,tdep); pg.rotateX(-Math.PI/2); pg.rotateX(THREE.MathUtils.degToRad(TILT)); // front edge low, faces south (+z)
+    const im=new THREE.InstancedMesh(pg,panelMat,F.tables.length); const m=new THREE.Matrix4(); const eg=new THREE.EdgesGeometry(pg); const epos=[];
+    F.tables.forEach((t,i)=>{ const y=Y(heightAt(t.x,t.z))+1.0; m.makeTranslation(t.x,y,t.z); im.setMatrixAt(i,m);
+      const e=eg.attributes.position; for(let v=0;v<e.count;v++) epos.push(e.getX(v)+t.x, e.getY(v)+y, e.getZ(v)+t.z); });
+    objs.panels.add(im); const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(epos,3)); objs.panels.add(new THREE.LineSegments(lg,panelEdgeMat));
+    let cx=0,cz=0; F.tables.forEach(t=>{cx+=t.x; cz+=t.z;}); cx/=F.tables.length; cz/=F.tables.length; objs.panels.userData.pos=new THREE.Vector3(cx, Y(heightAt(cx,cz))+6, cz); }
+  // pond label position
+  let px=0,pz=0,pn=0,py=0; for(let k=0;k<N*N;k++) if(F.depth[k]>0.05){ px+=(k%N)*cs; pz+=((k/N)|0)*cs; py=Math.max(py,Y(F.filled[k])); pn++; }
+  objs.pondPos = pn? new THREE.Vector3(px/pn, py+3, pz/pn) : null;
+  // road label
+  if (F.road && F.road.length){ const r=F.road[Math.floor(F.road.length*0.78)]; objs.roadPos=new THREE.Vector3(r[0], Y(heightAt(r[0],r[1]))+3, r[1]); } else objs.roadPos=null;
+  applyLayers(); renderStats(); renderLegend();
+}
+
+function applyLayers(){
+  uniforms.uContours.value=layers.contours?1:0;
+  if (objs.streams) objs.streams.visible=layers.water;
+  if (objs.pond) objs.pond.visible=true;
+  if (objs.marker) objs.marker.visible=layers.water;
+  if (objs.panels) objs.panels.visible=layers.panels;
+  for (const [id,k] of [['bCon','contours'],['bWater','water'],['bSolar','solar'],['bPanels','panels']]) document.getElementById(id).classList.toggle('on',layers[k]);
+  renderLegend();
+}
+
+/* ---------- UI text ---------- */
+const fmt=(v,d=0)=>v.toLocaleString('en-IN',{maximumFractionDigits:d,minimumFractionDigits:d});
+function renderStats(){
+  const {N,cs,h}=F, A=cs*cs; let mn=1e9,mx=-1e9,sum=0,sl=0,slMax=0,pond=0,pondVol=0,pondMax=0,wetA=0,surf=0;
+  for(let k=0;k<N*N;k++){ mn=Math.min(mn,h[k]); mx=Math.max(mx,h[k]); sum+=h[k]; sl+=F.slope[k]; slMax=Math.max(slMax,F.slope[k]); if(F.depth[k]>0.05){ pond+=A; pondVol+=F.depth[k]*A; pondMax=Math.max(pondMax,F.depth[k]); } else if(F.wet[k]>0.55) wetA+=A; surf+=A*Math.sqrt(1+(F.slope[k]/100)**2); }
+  const area=F.size*F.size, flowLen=F.streams.reduce((s,l)=>s+l.length*cs,0);
+  const rainCatch=area*0.9*0.35; // 900 mm/yr rain (Madurai, approx) × 35% runoff
+  const rows=(t)=>t.map(([a,b])=>`<div class="row"><span>${a}</span><span>${b}</span></div>`).join('');
+  document.getElementById('stats').innerHTML=`<h1>${F.name}</h1><div class="sub">${F.sub}</div>
+  <h2>GEOMETRY</h2>${rows([['Plan area',`${fmt(area)} m² (${fmt(area/1e4,2)} ha)`],['Perimeter',`${fmt(F.size*4)} m`],['Surface area (3D)',`${fmt(surf)} m²`]])}
+  <h2>TERRAIN</h2>${rows([['Elevation min / max',`${fmt(mn,2)} / ${fmt(mx,2)} m`],['Relief',`${fmt(mx-mn,2)} m`],['Slope avg / max',`${fmt(sl/(N*N),1)} / ${fmt(slMax,1)} %`]])}
+  <h2 class="w">WATER (SURFACE)</h2>${rows([['Natural pond',`${fmt(pond)} m² · up to ${fmt(pondMax,1)} m deep`],['Pond holds (full)',`≈ ${fmt(pondVol)} m³`],['Wet / waterlogging zones',`${fmt(wetA)} m²`],['Run-off channels',`${fmt(flowLen)} m`],['Suggested new farm pond',F.newPond>=0?`catches ≈ ${fmt(F.newPondCatch)} m² of land`:'—'],['Rain run-off per year',`≈ ${fmt(rainCatch)} m³ (estimate)`]])}
+  <h2 class="s">SOLAR</h2>${rows([['Good ground (score ≥ 70)',`${fmt(F.suitable*A)} m² (${fmt(F.suitable*A/area*100)}%)`],['Panel tables placed',`${fmt(F.tables.length)} × ${TABLE.cols} panels`],['Capacity',`${fmt(F.kWp,1)} kWp`],['Energy per year',`≈ ${fmt(F.kWh/1000,1)} MWh (estimate)`],['Panels face',`South, tilted ${TILT}°`]])}`;
+}
+function renderLegend(){
+  const el=document.getElementById('legend'); let html='';
+  if (layers.solar) html+=`<div><b style="color:var(--green)">SOLAR SCORE</b><div class="bar" style="background:linear-gradient(90deg,#e6261f,#ffa626,#8cff4d)"></div><div class="ends"><span>0 · avoid</span><span>100 · best</span></div></div>`;
+  if (layers.water) html+=`<div style="margin-top:6px"><b style="color:#9cc4ff">WATER</b><div class="bar" style="background:linear-gradient(90deg,#0b2240,#3f78ff)"></div><div class="ends"><span>dry</span><span>water collects</span></div><div style="color:var(--dim);margin-top:3px">Moving lines = rain run-off paths · ring = best new farm pond</div></div>`;
+  if (layers.panels) html+=`<div style="margin-top:6px"><b style="color:var(--amber)">PANELS</b> <span style="color:var(--dim)">${F.tables.length} tables · ${fmt(F.kWp,1)} kWp</span></div>`;
+  if (!html) html=`<span style="color:var(--dim)">Turn on <b>Water</b> or <b>Solar</b> to see the analysis.</span>`;
+  el.innerHTML=html;
+}
+
+/* ---------- labels ---------- */
+const labelsEl=document.getElementById('labels');
+function lab(cls){ const d=document.createElement('div'); d.className='lab '+cls; labelsEl.appendChild(d); return d; }
+const L={N:lab('c'),E:lab('c'),S:lab('c'),W:lab('c'),pond:lab('w'),newp:lab('w'),road:lab('r'),solar:lab('s')};
+L.N.textContent='N'; L.E.textContent='E'; L.S.textContent='S'; L.W.textContent='W'; L.pond.textContent='POND'; L.newp.textContent='NEW FARM POND HERE'; L.road.textContent='ACCESS ROAD'; L.solar.textContent='SOLAR BLOCK';
+const _v=new THREE.Vector3();
+function place(el, p, show=true){ if(!p||!show){ el.style.opacity=0; return; } _v.copy(p).add(fieldG.position).project(camera); if(_v.z>1){ el.style.opacity=0; return; } el.style.opacity=1; el.style.left=((_v.x+1)/2*innerWidth)+'px'; el.style.top=((1-_v.y)/2*innerHeight)+'px'; }
+function updateLabels(){ const s=F.size, y=-2;
+  place(L.N,new THREE.Vector3(s/2,y,-8)); place(L.S,new THREE.Vector3(s/2,y,s+12)); place(L.E,new THREE.Vector3(s+10,y,s/2)); place(L.W,new THREE.Vector3(-10,y,s/2));
+  place(L.pond,objs.pondPos); place(L.road,objs.roadPos, !layers.solar);
+  place(L.newp,objs.marker&&objs.marker.userData.pos, layers.water); place(L.solar,objs.panels&&objs.panels.userData.pos, layers.panels); }
+
+/* ---------- probe ---------- */
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2();
+canvas.addEventListener('pointermove',e=>{ mouse.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1); ray.setFromCamera(mouse,camera); const hit=ray.intersectObject(terrain)[0];
+  const v=document.getElementById('probeV'), vd=document.getElementById('probeVerdict');
+  if(!hit){ v.textContent='Move the cursor over the field'; vd.textContent=''; return; }
+  const p=hit.point.clone().sub(fieldG.position); const i=Math.round(p.x/F.cs), j=Math.round(p.z/F.cs); if(i<0||j<0||i>=F.N||j>=F.N) return; const k=j*F.N+i;
+  const dirs=['N','NE','E','SE','S','SW','W','NW']; const asp=F.slope[k]<1?'flat':dirs[Math.round(F.aspect[k]/45)%8];
+  v.textContent=`Position     ${fmt(p.x,0)} m E · ${fmt(F.size-p.z,0)} m N
+Elevation    ${fmt(F.h[k],2)} m
+Slope        ${fmt(F.slope[k],1)} % (${asp})
+Wetness      ${F.depth[k]>0.05?'pond, '+fmt(F.depth[k],2)+' m deep':Math.round(F.wet[k]*100)+' / 100'}
+Solar score  ${Math.round(F.solar[k])} / 100`;
+  const s=F.solar[k]; vd.style.color= s>=70?'var(--green)': s>=40?'var(--amber)':'#ff6b5e'; vd.textContent=F.why[k]; });
+
+/* ---------- controls ---------- */
+const btn=(id,fn)=>document.getElementById(id).addEventListener('click',fn);
+btn('bCon',()=>{ layers.contours=!layers.contours; applyLayers(); });
+btn('bWater',()=>{ layers.water=!layers.water; applyLayers(); });
+btn('bSolar',()=>{ layers.solar=!layers.solar; applyLayers(); });
+btn('bPanels',()=>{ layers.panels=!layers.panels; applyLayers(); });
+btn('bRot',e=>{ controls.autoRotate=!controls.autoRotate; e.target.classList.toggle('on',controls.autoRotate); });
+let camAnim=null; function flyTo(pos){ camAnim={from:camera.position.clone(), to:pos, t:0}; }
+const HOME=()=>new THREE.Vector3(F.size*0.95, F.size*0.85, F.size*1.25);
+btn('bTop',()=>flyTo(new THREE.Vector3(0.01, F.size*1.9, 0.02)));
+btn('bReset',()=>flyTo(HOME()));
+const vexEl=document.getElementById('vex'); vexEl.addEventListener('input',()=>{ vex=parseFloat(vexEl.value); document.getElementById('vexV').textContent=vex.toFixed(1); build(); });
+document.getElementById('file').addEventListener('change',async e=>{ const file=e.target.files[0]; if(!file) return; const text=await file.text();
+  try{ const f=parseCSV(text, file.name); F=prep(analyse(f)); build(); flyTo(HOME()); } catch(err){ alert('Could not read this file: '+err.message+'\n\nExpected: a CSV grid of elevations in metres (one row per line), optionally with a first line like  # size=120  for the field width in metres.'); } });
+
+// CSV grid: rows of elevations (metres), north row first. Optional "# size=120" line for field width in metres.
+function parseCSV(text, name){
+  let size=100; const rowsRaw=[]; for (const line of text.split(/\r?\n/)){ const m=line.match(/size\s*=\s*([\d.]+)/i); if(m){ size=parseFloat(m[1]); continue; } if(!line.trim()||line.trim().startsWith('#')) continue;
+    const vals=line.split(/[,;\s\t]+/).filter(Boolean).map(Number); if(vals.some(isNaN)) continue; rowsRaw.push(vals); }
+  if (rowsRaw.length<10) throw new Error('need at least 10 rows of numbers');
+  const W=Math.min(...rowsRaw.map(r=>r.length)); if (W<10) throw new Error('need at least 10 columns');
+  const N=101, h=new Float32Array(N*N);
+  for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const fx=i/(N-1)*(W-1), fz=j/(N-1)*(rowsRaw.length-1); const a=Math.floor(fx), b=Math.floor(fz), u=fx-a, v=fz-b, a1=Math.min(W-1,a+1), b1=Math.min(rowsRaw.length-1,b+1);
+    h[j*N+i]=rowsRaw[b][a]*(1-u)*(1-v)+rowsRaw[b][a1]*u*(1-v)+rowsRaw[b1][a]*(1-u)*v+rowsRaw[b1][a1]*u*v; }
+  document.getElementById('note').innerHTML='Elevation loaded from <b>'+name.replace(/[<>&]/g,'')+'</b>. Vertical scale exaggerated.<br>Shows surface water only, not groundwater.';
+  return {N, size, h, name:'MY FIELD', sub:`${name.replace(/\.[^.]+$/,'')} · ${size} m × ${size} m`, demo:false, road:[], trees:[]};
+}
+
+/* ---------- boot ---------- */
+function prep(f){ let mn=1e9; for(const v of f.h) mn=Math.min(mn,v); f.hmin=mn; return f; }
+F=demoField(); F.road=demoRoad(F.size); F=prep(analyse(F));
+camera.position.copy(HOME()); controls.target.set(0,4,0); controls.update(); build();
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+function tick(dt){
+  uniforms.uTime.value+=dt;
+  const k=1-Math.exp(-dt*5); uniforms.uWater.value+=((layers.water?1:0)-uniforms.uWater.value)*k; uniforms.uSolar.value+=((layers.solar?1:0)-uniforms.uSolar.value)*k;
+  if (camAnim){ camAnim.t=Math.min(1,camAnim.t+dt/1.4); const e=camAnim.t<.5?2*camAnim.t*camAnim.t:1-Math.pow(-2*camAnim.t+2,2)/2; camera.position.lerpVectors(camAnim.from,camAnim.to,e); if(camAnim.t>=1) camAnim=null; }
+  if (objs.marker) objs.marker.children.forEach((m,i)=>{ if(i===0) m.scale.setScalar(1+0.15*Math.sin(uniforms.uTime.value*3)); });
+  controls.update(dt); renderer.render(scene,camera); updateLabels();
+}
+let last=performance.now();
+function loop(now){ const dt=Math.min(0.05,(now-last)/1000); last=now; tick(dt); requestAnimationFrame(loop); }
+if (!CAPTURE) requestAnimationFrame(loop);
+
+/* ---------- deterministic capture for video ---------- */
+window.__cap={ tick, layers, applyLayers, camera, controls, flyTo, HOME, F:()=>F,
+  set(k,v){ layers[k]=v; applyLayers(); }, rotate(on,speed=1.2){ controls.autoRotate=on; controls.autoRotateSpeed=speed; },
+  title(on){ document.getElementById('title').classList.toggle('show',on); },
+  caption(t){ const c=document.getElementById('caption'); if(t){ c.textContent=t; c.classList.add('show'); } else c.classList.remove('show'); } };
+</script>
+</body>
+</html>
