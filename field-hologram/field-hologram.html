@@ -396,7 +396,7 @@ if(reduce){auto=false;document.getElementById('b-rot').setAttribute('aria-presse
 var clock=new THREE.Clock();
 build();resize();
 // URL/test hook: ?view=top etc.
-window.__holo={cam:cam,M:M,setAuto:function(v){auto=v;}};
+window.__holo={scene:scene,cam:cam,M:M,setAuto:function(v){auto=v;}};
 
 function tick(){
   var dt=Math.min(clock.getDelta(),0.05);
