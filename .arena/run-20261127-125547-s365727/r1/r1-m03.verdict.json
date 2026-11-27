@@ -1,0 +1,14 @@
+{
+  "match": "r1-m03",
+  "scores": {
+    "a004": {"correctness": 8, "completeness": 9, "specificity": 8, "robustness": 8, "clarity": 7, "fatal": false},
+    "a005": {"correctness": 8, "completeness": 7, "specificity": 9, "robustness": 8, "clarity": 8, "fatal": false}
+  },
+  "winner": "a004",
+  "reason": "a004 covers every requested area including materials, lighting, OCR/CV tools and a fallback path, while a005 is strong on tests and environment fit but thin on materials and lighting.",
+  "survived": ["gap bridging between stage 3 and 4 fixed", "tiered scale gate fixed", "net-area and footprint conventions defined", "v1 now image/PDF in, glb out", "severity table removes false errors", "Blender fallback specified with limits", "polylabel cameras and rotation handling"],
+  "standing": {
+    "a004": ["minor: v1 relies on Claude vision while privacy row says process locally", "minor: 3.5 m gap-bridging heuristic could join unrelated collinear walls"],
+    "a005": ["minor: materials and lighting only briefly specified", "minor: byte-identical GLB determinism test unproven"]
+  }
+}

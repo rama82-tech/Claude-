@@ -1,0 +1,14 @@
+{
+  "match": "r1-m07",
+  "scores": {
+    "a002": {"correctness": 7, "completeness": 8, "specificity": 7, "robustness": 7, "clarity": 8, "fatal": false},
+    "a012": {"correctness": 8, "completeness": 8, "specificity": 9, "robustness": 7, "clarity": 6, "fatal": false}
+  },
+  "winner": "a012",
+  "reason": "a012 ships runnable code and checks the container (no Blender, no tesseract, CDN blocked, Playwright needs executablePath), while a002 is an untested design that assumes tesseract, apt and default Playwright launch work.",
+  "survived": ["opening detection on piers, stubs and hall gaps fixed with --min-len 0.25 and a gaps list", "hollow-wall plans handled with --style auto and hollow", "overlay, scale check and warnings now produced by the code", "floor follows the real footprint by flood fill", "semantics protocol has a prompt, a schema and count validation", "shadow frustum and the orthographic top camera fixed"],
+  "standing": {
+    "a002": ["scale OCR depends on tesseract and apt, and the proxy may block it", "Playwright launch with the installed Chromium is not addressed, so the preview may fail", "no code is shown, so the pipeline is unverified", "unclear how Claude gets the pixel endpoints for scale"],
+    "a012": ["vector PDF extraction is mentioned but has no code and is untested", "scale pixel endpoints are read by eye from the grid, so error is about 5 px", "no tests on real plans, scans or hatching", "very long, with code inlined"]
+  }
+}

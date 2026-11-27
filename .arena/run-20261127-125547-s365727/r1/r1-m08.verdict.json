@@ -1,0 +1,22 @@
+{
+  "match": "r1-m08",
+  "scores": {
+    "a007": {"correctness": 8, "completeness": 9, "specificity": 9, "robustness": 9, "clarity": 7, "fatal": false},
+    "a009": {"correctness": 6, "completeness": 7, "specificity": 7, "robustness": 7, "clarity": 8, "fatal": false}
+  },
+  "winner": "a007",
+  "reason": "a007 fixed all seven attacks in the text (wall-style paths with a pairing algorithm, stated Z-up to Y-up rotation plus a test, net-area rooms, OCR association, local HTTP server, preflight), while a009 fixed its own attacks but still never states the trimesh Z-up to glTF Y-up rotation, leaves double-line wall detection to a risk-table line, and polygonizes rooms on centrelines.",
+  "survived": [
+    "double-line walls: style classifier plus vector pairing and raster closing paths",
+    "Z-up GLB lying on its side: single stated rotation and height test",
+    "centreline vs net room area: net floor from wall complement, worked example",
+    "OCR scale association: algorithm given, manual two-point scale is v1",
+    "file:// GLB fetch: http.server, vendored three.js, import map",
+    "tesseract/blender install: preflight with fallbacks",
+    "vague time and done criteria: numeric thresholds and sample plans"
+  ],
+  "standing": {
+    "a007": ["fast path has Claude write metres into plan.json without a stored pixel origin, so the overlay mapping is loosely specified (minor)"],
+    "a009": ["Z-up to Y-up rotation still unspecified, so the viewer would show the building on its side (the same flaw a009 raised against a007)", "room clear widths taken from centreline polygonize without an inset, so the check is inconsistent", "pytesseract listed without the binary or fallback, and no Blender install route (minor)"]
+  }
+}

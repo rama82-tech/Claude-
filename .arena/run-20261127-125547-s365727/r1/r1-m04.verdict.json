@@ -1,0 +1,11 @@
+{
+  "match": "r1-m04",
+  "scores": {
+    "a006": {"correctness": 9, "completeness": 9, "specificity": 9, "robustness": 9, "clarity": 7, "fatal": false},
+    "a011": {"correctness": 8, "completeness": 8, "specificity": 7, "robustness": 8, "clarity": 8, "fatal": false}
+  },
+  "winner": "a006",
+  "reason": "a006 ships a complete, run-tested chain (px_plan.json, px2m.py, overlay.py, build.py with named PBR meshes, viewer.html, shot.mjs) that closes every attack, while a011 gives only one single-material build script and leaves the viewer, check.py and Blender render path as prose or unverified.",
+  "survived": ["install missing mapbox-earcut: fixed", "Z-up vs Y-up: fixed with -90 deg rotation", "floor trench in doorways: fixed with threshold piece", "unnamed non-PBR meshes: fixed", "no pixel schema or extraction tooling: fixed", "2% scale hard reject: fixed with modes A-D", "stray wall slab crash and divider: fixed"],
+  "standing": {"a006": ["mode C per-wall printed dimensions is manual and unimplemented (minor)", "vision extraction, OCR and OpenCV snapping untested (minor)"], "a011": ["check.py and viewer.html code not provided, only described (minor)", "Blender path unverified, relies on optional probe (minor)", "reference build uses one uniform material, per-room materials deferred (minor)"]}
+}

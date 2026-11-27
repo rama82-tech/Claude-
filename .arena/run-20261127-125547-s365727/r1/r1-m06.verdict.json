@@ -1,0 +1,11 @@
+{
+  "match": "r1-m06",
+  "scores": {
+    "a016": {"correctness": 8, "completeness": 8, "specificity": 9, "robustness": 8, "clarity": 8, "fatal": false},
+    "a008": {"correctness": 7, "completeness": 8, "specificity": 7, "robustness": 7, "clarity": 6, "fatal": false}
+  },
+  "winner": "a016",
+  "reason": "a016 ships a runnable, tested v0.1 script with a concrete scale recipe, Y-up export and honestly stated limits, while a008 offers a more elaborate but untested nine-script design with no code, undefined thresholds and a padded analogy section.",
+  "survived": ["open-outer-gap floor bug fixed with closing and retested", "Z-up export fixed by -90 degree rotation and verified by reload", "overlay and sanity warnings added", "scale recipe added", "vector PDF overstatement removed", "full-height openings disclosed as a v0.1 limit", "unmeasured percentages removed"],
+  "standing": {"a016": ["openings are full-height slots in v0.1 (disclosed, deferred)", "Y-up not verified in a real viewer (disclosed)"], "a008": ["v1 is nine scripts with no code, so nothing is verified", "thresholds calibrated on test plans that are not defined", "unverified installs of OpenCV and Tesseract, with the fallback being hand-written plan.json", "cheque analogy is padding"]}
+}

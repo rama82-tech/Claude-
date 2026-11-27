@@ -26,7 +26,7 @@
      "how": "Hunt the edge cases, failure modes and weird inputs first, and design the answer around surviving them."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a001.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m05.a001.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -50,10 +50,10 @@
      "how": "Pick the least complicated answer that fully does the job. Every extra part has to justify itself."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a002.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m07.a002.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a012",
    "byes": 0
   },
   "a003": {
@@ -74,10 +74,10 @@
      "how": "Remove things until it breaks, then put the last one back. Fewer steps, fewer dependencies, fewer words."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a003.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m05.a003.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a001",
    "byes": 0
   },
   "a004": {
@@ -98,7 +98,7 @@
      "how": "Assume the inputs are bad and the conditions are hostile. Make the answer fail safely and loudly rather than quietly."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a004.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m03.a004.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -122,10 +122,10 @@
      "how": "Optimise for how this holds up in six months: easy to maintain, easy to extend, no traps for the next person."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a005.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m03.a005.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a004",
    "byes": 0
   },
   "a006": {
@@ -146,7 +146,7 @@
      "how": "Name the real trade-offs, choose for the user's most likely constraints, and say plainly what that choice gives up."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a006.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m04.a006.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -170,7 +170,7 @@
      "how": "Optimise for the fastest route to something usable today. Cut anything that does not move the result."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a007.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m08.a007.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -194,10 +194,10 @@
      "how": "Assume the inputs are bad and the conditions are hostile. Make the answer fail safely and loudly rather than quietly."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a008.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m06.a008.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a016",
    "byes": 0
   },
   "a009": {
@@ -218,10 +218,10 @@
      "how": "Optimise for the fastest route to something usable today. Cut anything that does not move the result."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a009.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m08.a009.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a007",
    "byes": 0
   },
   "a010": {
@@ -242,7 +242,7 @@
      "how": "Pick the least complicated answer that fully does the job. Every extra part has to justify itself."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a010.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m02.a010.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -266,10 +266,10 @@
      "how": "Start from the person who will use this: their situation, their skill level, and what they will actually do next. Shape everything around that."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a011.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m04.a011.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a006",
    "byes": 0
   },
   "a012": {
@@ -290,7 +290,7 @@
      "how": "Leave out nothing the task asks for or clearly implies. Cover every requirement explicitly."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a012.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m07.a012.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -314,10 +314,10 @@
      "how": "Make it the easiest answer to read and act on: plain words, obvious structure, nothing the reader has to decode."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a013.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m01.a013.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a015",
    "byes": 0
   },
   "a014": {
@@ -338,10 +338,10 @@
      "how": "Exact numbers, names, commands, file paths and steps. Zero generic advice."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a014.md",
-   "alive": true,
-   "eliminated_in": null,
-   "eliminated_by": null,
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m02.a014.solution.md",
+   "alive": false,
+   "eliminated_in": 1,
+   "eliminated_by": "a010",
    "byes": 0
   },
   "a015": {
@@ -362,7 +362,7 @@
      "how": "Leave out nothing the task asks for or clearly implies. Cover every requirement explicitly."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a015.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m01.a015.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -386,7 +386,7 @@
      "how": "Be exhaustive and exact. Check every step, verify every claim, and leave no hand-waving anywhere."
     }
    },
-   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r0/a016.md",
+   "solution": "/home/user/Claude-/.arena/run-20261127-125547-s365727/r1/r1-m06.a016.solution.md",
    "alive": true,
    "eliminated_in": null,
    "eliminated_by": null,
@@ -419,72 +419,198 @@
      "id": "r1-m01",
      "a": "a015",
      "b": "a013",
-     "winner": null,
-     "loser": null,
-     "reason": null,
-     "survived": [],
-     "scores": null,
-     "source": null
+     "winner": "a015",
+     "loser": "a013",
+     "reason": "a015 fixed all seven attacks with tested, convention-correct build code (per-wall cuts, manifold union, Z-up to Y-up rotation, separate scale check), while a013 still never converts Z-up trimesh output to glTF Y-up, leaves make_cutter undefined, and has a thin vector-PDF method.",
+     "survived": [
+      "circular verify: separated detection fit from held-out scale check",
+      "Y-up axis bug: single -90 degree X rotation plus bounds test",
+      "opening cuts notching neighbour walls: per-wall cut with manifold union",
+      "vector PDF no method: style-group inventory and parallel pairing added",
+      "minimal version too big: back-end-first v0 with gridded image calibration",
+      "deskew vs perspective: tested separately",
+      "pytesseract/bpy/coplanar faces: apt note, blender binary preferred, merged solid test"
+     ],
+     "scores": {
+      "a015": 88.0,
+      "a013": 78.0
+     },
+     "source": "judge"
     },
     {
      "id": "r1-m02",
      "a": "a010",
      "b": "a014",
-     "winner": null,
-     "loser": null,
-     "reason": null,
-     "survived": [],
-     "scores": null,
-     "source": null
+     "winner": "a010",
+     "loser": "a014",
+     "reason": "a010 holds up better: its v1 runs without Blender (shapely band extrusion plus trimesh, and a matplotlib fallback), and it settles the printed-dimension face convention. a014 makes bpy a core v1 dependency with no fallback and leaves the scale-line face unspecified.",
+     "survived": [
+      "trimesh has no booleans: fixed with 2D band extrusion",
+      "double-line walls: fixed with paired-line extraction and a zero-wall hard stop",
+      "room flood fill leaks through doors: fixed with geometry-based rooms and bridging rectangles",
+      "centreline vs printed face dimension: fixed with a declared ref-face and an outer-face check",
+      "no GUI click for scale: fixed with grid.png, vector-scale route and parse_length",
+      "headless three.js (file://, SwiftShader flags, ready flag): fixed",
+      "materials values and Blender install: fixed with a values table and fallbacks"
+     ],
+     "scores": {
+      "a010": 83.5,
+      "a014": 79.5
+     },
+     "source": "judge"
     },
     {
      "id": "r1-m03",
      "a": "a004",
      "b": "a005",
-     "winner": null,
-     "loser": null,
-     "reason": null,
-     "survived": [],
-     "scores": null,
-     "source": null
+     "winner": "a004",
+     "loser": "a005",
+     "reason": "a004 covers every requested area including materials, lighting, OCR/CV tools and a fallback path, while a005 is strong on tests and environment fit but thin on materials and lighting.",
+     "survived": [
+      "gap bridging between stage 3 and 4 fixed",
+      "tiered scale gate fixed",
+      "net-area and footprint conventions defined",
+      "v1 now image/PDF in, glb out",
+      "severity table removes false errors",
+      "Blender fallback specified with limits",
+      "polylabel cameras and rotation handling"
+     ],
+     "scores": {
+      "a004": 81.5,
+      "a005": 79.0
+     },
+     "source": "judge"
     },
     {
      "id": "r1-m04",
      "a": "a006",
      "b": "a011",
-     "winner": null,
-     "loser": null,
-     "reason": null,
-     "survived": [],
-     "scores": null,
-     "source": null
+     "winner": "a006",
+     "loser": "a011",
+     "reason": "a006 ships a complete, run-tested chain (px_plan.json, px2m.py, overlay.py, build.py with named PBR meshes, viewer.html, shot.mjs) that closes every attack, while a011 gives only one single-material build script and leaves the viewer, check.py and Blender render path as prose or unverified.",
+     "survived": [
+      "install missing mapbox-earcut: fixed",
+      "Z-up vs Y-up: fixed with -90 deg rotation",
+      "floor trench in doorways: fixed with threshold piece",
+      "unnamed non-PBR meshes: fixed",
+      "no pixel schema or extraction tooling: fixed",
+      "2% scale hard reject: fixed with modes A-D",
+      "stray wall slab crash and divider: fixed"
+     ],
+     "scores": {
+      "a006": 88.0,
+      "a011": 78.5
+     },
+     "source": "judge"
     },
     {
      "id": "r1-m05",
      "a": "a001",
      "b": "a003",
-     "winner": null,
-     "loser": null,
-     "reason": null,
-     "survived": [],
-     "scores": null,
-     "source": null
+     "winner": "a001",
+     "loser": "a003",
+     "reason": "a001 gives a complete, concrete pipeline with working build code, an explicit image-to-metre transform, basis-aware dimension checks and an edge-case table, while a003 is leaner but leaves out build code, scans and photos, and Blender, and its clipping-plane cutaway leaves hollow, uncapped walls.",
+     "survived": [
+      "overlay lacked image-to-metre registration: fixed with image block and fit_transform",
+      "centreline vs printed dimension basis: fixed with per-end basis and check_dims",
+      "MultiPolygon and notch in geometry code: fixed with loop extrusion and opening-overlap rejection",
+      "wrong install line (opencv, earcut): fixed",
+      "virtual walls, room labels and wall kinds ignored: fixed via kind handling and seed-point matching",
+      "Reader A and merge rule ambiguous: fixed with interactive and automated modes and centreline snapping",
+      "headless renderer under-specified: fixed with viewer.html, shot.py, swiftshader flags and fallback"
+     ],
+     "scores": {
+      "a001": 86.0,
+      "a003": 71.0
+     },
+     "source": "judge"
     },
     {
      "id": "r1-m06",
      "a": "a016",
      "b": "a008",
-     "winner": null,
-     "loser": null,
-     "reason": null,
-     "survived": [],
-     "scores": null,
-     "source": null
+     "winner": "a016",
+     "loser": "a008",
+     "reason": "a016 ships a runnable, tested v0.1 script with a concrete scale recipe, Y-up export and honestly stated limits, while a008 offers a more elaborate but untested nine-script design with no code, undefined thresholds and a padded analogy section.",
+     "survived": [
+      "open-outer-gap floor bug fixed with closing and retested",
+      "Z-up export fixed by -90 degree rotation and verified by reload",
+      "overlay and sanity warnings added",
+      "scale recipe added",
+      "vector PDF overstatement removed",
+      "full-height openings disclosed as a v0.1 limit",
+      "unmeasured percentages removed"
+     ],
+     "scores": {
+      "a016": 81.5,
+      "a008": 71.5
+     },
+     "source": "judge"
     },
     {
      "id": "r1-m07",
      "a": "a002",
      "b": "a012",
+     "winner": "a012",
+     "loser": "a002",
+     "reason": "a012 ships runnable code and checks the container (no Blender, no tesseract, CDN blocked, Playwright needs executablePath), while a002 is an untested design that assumes tesseract, apt and default Playwright launch work.",
+     "survived": [
+      "opening detection on piers, stubs and hall gaps fixed with --min-len 0.25 and a gaps list",
+      "hollow-wall plans handled with --style auto and hollow",
+      "overlay, scale check and warnings now produced by the code",
+      "floor follows the real footprint by flood fill",
+      "semantics protocol has a prompt, a schema and count validation",
+      "shadow frustum and the orthographic top camera fixed"
+     ],
+     "scores": {
+      "a002": 73.5,
+      "a012": 77.5
+     },
+     "source": "judge"
+    },
+    {
+     "id": "r1-m08",
+     "a": "a007",
+     "b": "a009",
+     "winner": "a007",
+     "loser": "a009",
+     "reason": "a007 fixed all seven attacks in the text (wall-style paths with a pairing algorithm, stated Z-up to Y-up rotation plus a test, net-area rooms, OCR association, local HTTP server, preflight), while a009 fixed its own attacks but still never states the trimesh Z-up to glTF Y-up rotation, leaves double-line wall detection to a risk-table line, and polygonizes rooms on centrelines.",
+     "survived": [
+      "double-line walls: style classifier plus vector pairing and raster closing paths",
+      "Z-up GLB lying on its side: single stated rotation and height test",
+      "centreline vs net room area: net floor from wall complement, worked example",
+      "OCR scale association: algorithm given, manual two-point scale is v1",
+      "file:// GLB fetch: http.server, vendored three.js, import map",
+      "tesseract/blender install: preflight with fallbacks",
+      "vague time and done criteria: numeric thresholds and sample plans"
+     ],
+     "scores": {
+      "a007": 85.0,
+      "a009": 68.0
+     },
+     "source": "judge"
+    }
+   ],
+   "bye": null,
+   "closed": true
+  },
+  {
+   "n": 2,
+   "alive": [
+    "a001",
+    "a004",
+    "a006",
+    "a007",
+    "a010",
+    "a012",
+    "a015",
+    "a016"
+   ],
+   "matches": [
+    {
+     "id": "r2-m01",
+     "a": "a007",
+     "b": "a001",
      "winner": null,
      "loser": null,
      "reason": null,
@@ -493,9 +619,31 @@
      "source": null
     },
     {
-     "id": "r1-m08",
-     "a": "a007",
-     "b": "a009",
+     "id": "r2-m02",
+     "a": "a012",
+     "b": "a010",
+     "winner": null,
+     "loser": null,
+     "reason": null,
+     "survived": [],
+     "scores": null,
+     "source": null
+    },
+    {
+     "id": "r2-m03",
+     "a": "a015",
+     "b": "a006",
+     "winner": null,
+     "loser": null,
+     "reason": null,
+     "survived": [],
+     "scores": null,
+     "source": null
+    },
+    {
+     "id": "r2-m04",
+     "a": "a016",
+     "b": "a004",
      "winner": null,
      "loser": null,
      "reason": null,

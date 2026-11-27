@@ -1,0 +1,22 @@
+{
+  "match": "r1-m05",
+  "scores": {
+    "a001": {"correctness": 9, "completeness": 9, "specificity": 9, "robustness": 8, "clarity": 7, "fatal": false},
+    "a003": {"correctness": 7, "completeness": 7, "specificity": 7, "robustness": 7, "clarity": 8, "fatal": false}
+  },
+  "winner": "a001",
+  "reason": "a001 gives a complete, concrete pipeline with working build code, an explicit image-to-metre transform, basis-aware dimension checks and an edge-case table, while a003 is leaner but leaves out build code, scans and photos, and Blender, and its clipping-plane cutaway leaves hollow, uncapped walls.",
+  "survived": [
+    "overlay lacked image-to-metre registration: fixed with image block and fit_transform",
+    "centreline vs printed dimension basis: fixed with per-end basis and check_dims",
+    "MultiPolygon and notch in geometry code: fixed with loop extrusion and opening-overlap rejection",
+    "wrong install line (opencv, earcut): fixed",
+    "virtual walls, room labels and wall kinds ignored: fixed via kind handling and seed-point matching",
+    "Reader A and merge rule ambiguous: fixed with interactive and automated modes and centreline snapping",
+    "headless renderer under-specified: fixed with viewer.html, shot.py, swiftshader flags and fallback"
+  ],
+  "standing": {
+    "a001": ["tested-on-sample claims are unverifiable and the document is long and dense (minor)"],
+    "a003": ["clipping-plane cutaway leaves hollow uncapped walls (minor)", "no actual build code and no support for scans or photos beyond refusing them (minor)", "unprinted positions are only eyeballed from the grid, with no anchor residual check (minor)"]
+  }
+}

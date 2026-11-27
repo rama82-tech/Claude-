@@ -1,0 +1,6 @@
+# arena sub-agent scratch work (large binaries)
+.arena/*/scratch/
+.arena/*/r*/work*/
+.arena/*/r*/w[0-9]*/
+.arena/*/r*/*.glb
+.arena/*/r*/*.png

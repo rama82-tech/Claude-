@@ -1,0 +1,11 @@
+{
+  "match": "r1-m01",
+  "scores": {
+    "a015": {"correctness": 9, "completeness": 9, "specificity": 9, "robustness": 9, "clarity": 7, "fatal": false},
+    "a013": {"correctness": 7, "completeness": 8, "specificity": 8, "robustness": 8, "clarity": 9, "fatal": false}
+  },
+  "winner": "a015",
+  "reason": "a015 fixed all seven attacks with tested, convention-correct build code (per-wall cuts, manifold union, Z-up to Y-up rotation, separate scale check), while a013 still never converts Z-up trimesh output to glTF Y-up, leaves make_cutter undefined, and has a thin vector-PDF method.",
+  "survived": ["circular verify: separated detection fit from held-out scale check", "Y-up axis bug: single -90 degree X rotation plus bounds test", "opening cuts notching neighbour walls: per-wall cut with manifold union", "vector PDF no method: style-group inventory and parallel pairing added", "minimal version too big: back-end-first v0 with gridded image calibration", "deskew vs perspective: tested separately", "pytesseract/bpy/coplanar faces: apt note, blender binary preferred, merged solid test"],
+  "standing": {"a015": ["v1 detection still unlikely to be quick; plan is long and dense"], "a013": ["GLB Y-up axis conversion not handled in build step", "build sketch relies on undefined make_cutter and free-end overextension by t/2", "vector PDF route lacks a wall-pairing method", "overlay self-check shares the same scale so cannot catch wrong scale"]}
+}

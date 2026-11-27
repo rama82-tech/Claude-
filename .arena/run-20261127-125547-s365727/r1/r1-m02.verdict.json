@@ -1,0 +1,22 @@
+{
+  "match": "r1-m02",
+  "scores": {
+    "a010": {"correctness": 8, "completeness": 8, "specificity": 9, "robustness": 9, "clarity": 8, "fatal": false},
+    "a014": {"correctness": 7, "completeness": 9, "specificity": 8, "robustness": 8, "clarity": 8, "fatal": false}
+  },
+  "winner": "a010",
+  "reason": "a010 holds up better: its v1 runs without Blender (shapely band extrusion plus trimesh, and a matplotlib fallback), and it settles the printed-dimension face convention. a014 makes bpy a core v1 dependency with no fallback and leaves the scale-line face unspecified.",
+  "survived": [
+    "trimesh has no booleans: fixed with 2D band extrusion",
+    "double-line walls: fixed with paired-line extraction and a zero-wall hard stop",
+    "room flood fill leaks through doors: fixed with geometry-based rooms and bridging rectangles",
+    "centreline vs printed face dimension: fixed with a declared ref-face and an outer-face check",
+    "no GUI click for scale: fixed with grid.png, vector-scale route and parse_length",
+    "headless three.js (file://, SwiftShader flags, ready flag): fixed",
+    "materials values and Blender install: fixed with a values table and fallbacks"
+  ],
+  "standing": {
+    "a010": ["wall-style fallback threshold wording is muddled (minor)"],
+    "a014": ["bpy wheel is a hard v1 dependency with no non-Blender fallback; pip install may not match the Python version (minor)", "scale-line face convention and acceptance bbox (centreline vs outer face) unspecified (minor)", "perspective fix relies on user-clicked corners in a terminal (minor)"]
+  }
+}
