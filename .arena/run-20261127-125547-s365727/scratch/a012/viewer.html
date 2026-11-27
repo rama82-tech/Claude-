@@ -1,0 +1,44 @@
+<!doctype html><meta charset=utf-8><title>plan viewer</title>
+<body style="margin:0"><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type=module>
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+const plan = await (await fetch('plan.json')).json();
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xf2f2f2);
+const wallMat = new THREE.MeshStandardMaterial({color:0xe8e4dc, roughness:.9});
+const floorMat = new THREE.MeshStandardMaterial({color:0xb99b78, roughness:.8, side:THREE.DoubleSide});
+const tmin=[1e9,1e9], tmax=[-1e9,-1e9];
+for (const w of plan.walls) {
+  const [ax,ay]=w.a,[bx,by]=w.b, dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy), h=w.h??plan.height;
+  const s = new THREE.Shape(); s.moveTo(0,0); s.lineTo(len,0); s.lineTo(len,h); s.lineTo(0,h); s.closePath();
+  for (const o of plan.openings.filter(o=>o.wall===w.id)) {            // holes in the wall elevation
+    const x0=o.offset-o.width/2, x1=o.offset+o.width/2, y0=o.sill, y1=o.sill+o.height;
+    const p=new THREE.Path(); p.moveTo(x0,y0); p.lineTo(x0,y1); p.lineTo(x1,y1); p.lineTo(x1,y0); p.closePath(); s.holes.push(p);
+  }
+  const g = new THREE.ExtrudeGeometry(s,{depth:w.t,bevelEnabled:false}); g.translate(0,0,-w.t/2);
+  const m = new THREE.Mesh(g, wallMat); m.rotation.y = Math.atan2(-dy,dx); m.position.set(ax,0,ay);
+  m.castShadow = m.receiveShadow = true; scene.add(m);
+  for (const [x,y] of [w.a,w.b]) {tmin[0]=Math.min(tmin[0],x);tmin[1]=Math.min(tmin[1],y);tmax[0]=Math.max(tmax[0],x);tmax[1]=Math.max(tmax[1],y);}
+}
+// floor slab = bounding box unless plan.rooms supplies polygons
+const polys = plan.rooms.length ? plan.rooms.map(r=>r.polygon) : [[[tmin[0],tmin[1]],[tmax[0],tmin[1]],[tmax[0],tmax[1]],[tmin[0],tmax[1]]]];
+for (const poly of polys) {
+  const fs = new THREE.Shape(poly.map(([x,y])=>new THREE.Vector2(x,-y)));
+  const g = new THREE.ShapeGeometry(fs); g.rotateX(-Math.PI/2);   // (x,-y,0) -> (x,0,y)
+  const f = new THREE.Mesh(g, floorMat); f.receiveShadow = true; scene.add(f);
+}
+scene.add(new THREE.HemisphereLight(0xffffff,0x888888,1.2));
+const sun = new THREE.DirectionalLight(0xffffff,2); sun.position.set(tmax[0],10,tmin[1]-4); sun.castShadow=true; scene.add(sun);
+const cx=(tmin[0]+tmax[0])/2, cz=(tmin[1]+tmax[1])/2, span=Math.max(tmax[0]-tmin[0],tmax[1]-tmin[1]);
+const cam = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, .1, 200);
+cam.position.set(cx+span*.6, span*.9, cz+span*1.1); cam.lookAt(cx,0,cz);
+const r = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true}); r.setSize(innerWidth,innerHeight); r.shadowMap.enabled=true;
+document.body.appendChild(r.domElement);
+const oc = new OrbitControls(cam,r.domElement); oc.target.set(cx,0,cz); oc.update();
+r.render(scene,cam);
+window.exportGLB = () => new Promise(res => new GLTFExporter().parse(scene, b => {   // binary ArrayBuffer -> base64
+  let s=''; const u=new Uint8Array(b); for(let i=0;i<u.length;i+=8192) s+=String.fromCharCode(...u.subarray(i,i+8192)); res(btoa(s));}, console.error, {binary:true}));
+window.shot = (view) => { if(view==='top'){cam.position.set(cx,span*1.6,cz+.001);cam.lookAt(cx,0,cz);} r.render(scene,cam); return r.domElement.toDataURL('image/png'); };
+window.ready = true;
+</script>

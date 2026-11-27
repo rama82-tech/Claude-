@@ -1,0 +1,10 @@
+import { chromium } from 'playwright'; import http from 'http'; import fs from 'fs'; import path from 'path';
+const srv = http.createServer((q,s)=>{const f=path.join('.',q.url==='/'?'viewer.html':q.url.split('?')[0]);
+  fs.readFile(f,(e,d)=>{ if(e){s.writeHead(404);s.end();return;} s.writeHead(200,{'content-type':f.endsWith('.json')?'application/json':'text/html'}); s.end(d);});}).listen(8123);
+const b = await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader']});
+const p = await b.newPage({viewport:{width:1280,height:800}});
+p.on('console',m=>console.log('page:',m.text())); p.on('pageerror',e=>console.log('err:',e.message));
+await p.goto('http://localhost:8123/'); await p.waitForFunction('window.ready===true',null,{timeout:60000});
+for (const v of ['persp','top']) fs.writeFileSync(`render_${v}.png`, Buffer.from((await p.evaluate(x=>window.shot(x),v)).split(',')[1],'base64'));
+fs.writeFileSync('model.glb', Buffer.from(await p.evaluate(()=>window.exportGLB()),'base64'));
+await b.close(); srv.close();
