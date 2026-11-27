@@ -1,0 +1,6 @@
+{"calibration":{"x":[100,1100,9.144],"y":[80,880,7.3152]},
+ "walls":[{"id":"W1","a":[100,880],"b":[1100,880],"kind":"exterior"},{"id":"W2","a":[1100,880],"b":[1100,80],"kind":"exterior"},
+          {"id":"W3","a":[1100,80],"b":[100,80],"kind":"exterior"},{"id":"W4","a":[100,80],"b":[100,880],"kind":"exterior"},
+          {"id":"W5","a":[700,880],"b":[700,80],"kind":"interior"},{"id":"W6","a":[700,480],"b":[1100,480],"kind":"interior"}],
+ "openings":[{"id":"D1","wall":"W1","at_px":[400,880],"w_px":100,"type":"door"}],
+ "rooms":[{"label":"Living","at_px":[300,500],"floor":"oak"}]}

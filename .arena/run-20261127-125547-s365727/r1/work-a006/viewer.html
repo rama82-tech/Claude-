@@ -1,0 +1,19 @@
+<!doctype html><meta charset=utf-8><style>html,body{margin:0;height:100%}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+const r = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true}); r.setSize(innerWidth, innerHeight); r.shadowMap.enabled = true; document.body.append(r.domElement);
+const s = new THREE.Scene(); s.background = new THREE.Color(0xdfe6ee);
+s.add(new THREE.HemisphereLight(0xffffff, 0x889099, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 2); sun.position.set(8, 14, 6); sun.castShadow = true; sun.shadow.camera.left=-12; sun.shadow.camera.right=12; sun.shadow.camera.top=12; sun.shadow.camera.bottom=-12; s.add(sun);
+const cam = new THREE.PerspectiveCamera(40, innerWidth/innerHeight, .1, 200), ctl = new OrbitControls(cam, r.domElement);
+window.view = (name) => { const c = window.centre; ctl.target.copy(c);
+  if (name === "top") { cam.position.set(c.x, 22, c.z+.001); } else { cam.position.set(c.x+11, 11, c.z+11); } ctl.update(); r.render(s, cam); };
+new GLTFLoader().load(new URLSearchParams(location.search).get("m") || "house.glb", g => {
+  g.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); s.add(g.scene);
+  window.centre = new THREE.Box3().setFromObject(g.scene).getCenter(new THREE.Vector3()); window.view("iso"); window.ready = true;
+  (function loop(){ requestAnimationFrame(loop); r.render(s, cam); })();
+});
+</script>

@@ -1,6 +1,6 @@
 import { chromium } from 'playwright'; import http from 'http'; import fs from 'fs'; import path from 'path';
-const srv = http.createServer((q,s)=>{const f=path.join('.',q.url==='/'?'viewer.html':q.url.split('?')[0]);
-  fs.readFile(f,(e,d)=>{ if(e){s.writeHead(404);s.end();return;} s.writeHead(200,{'content-type':f.endsWith('.json')?'application/json':'text/html'}); s.end(d);});}).listen(8123);
+const srv = http.createServer((q,s)=>{const f=q.url.startsWith('/vendor/')?path.join('tools/node_modules/three',q.url.slice(8).split('?')[0]):path.join('.',q.url==='/'?'viewer.html':q.url.split('?')[0]);
+  fs.readFile(f,(e,d)=>{ if(e){s.writeHead(404);s.end();return;} s.writeHead(200,{'content-type':f.endsWith('.json')?'application/json':f.endsWith('.js')?'text/javascript':'text/html'}); s.end(d);});}).listen(8123);
 const b = await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader']});
 const p = await b.newPage({viewport:{width:1280,height:800}});
 p.on('console',m=>console.log('page:',m.text())); p.on('pageerror',e=>console.log('err:',e.message));

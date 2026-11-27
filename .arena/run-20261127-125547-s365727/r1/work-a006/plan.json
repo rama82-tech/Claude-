@@ -1,0 +1,25 @@
+{
+  "units": "m",
+  "wall_height": 2.7,
+  "walls": [
+    {"id":"W1","a":[0,0],"b":[9.144,0],"t":0.2032,"kind":"exterior"},
+    {"id":"W2","a":[9.144,0],"b":[9.144,7.3152],"t":0.2032,"kind":"exterior"},
+    {"id":"W3","a":[9.144,7.3152],"b":[0,7.3152],"t":0.2032,"kind":"exterior"},
+    {"id":"W4","a":[0,7.3152],"b":[0,0],"t":0.2032,"kind":"exterior"},
+    {"id":"W5","a":[5.4864,0],"b":[5.4864,7.3152],"t":0.1143,"kind":"interior"},
+    {"id":"W6","a":[5.4864,3.6576],"b":[9.144,3.6576],"t":0.1143,"kind":"interior"}
+  ],
+  "openings": [
+    {"id":"D1","wall":"W1","at":2.7432,"w":0.9144,"sill":0,"head":2.1,"type":"door"},
+    {"id":"D2","wall":"W5","at":1.8288,"w":0.8128,"sill":0,"head":2.1,"type":"door"},
+    {"id":"D3","wall":"W5","at":5.4864,"w":0.8128,"sill":0,"head":2.1,"type":"door"},
+    {"id":"N1","wall":"W3","at":2.7432,"w":1.524,"sill":0.9,"head":2.1,"type":"window"},
+    {"id":"N2","wall":"W3","at":7.3152,"w":1.2192,"sill":0.9,"head":2.1,"type":"window"},
+    {"id":"S1","wall":"W1","at":7.3152,"w":1.2192,"sill":0.9,"head":2.1,"type":"window"}
+  ],
+  "rooms": [
+    {"label":"Living","at":[2.7,3.6],"floor":"oak"},
+    {"label":"Bed 1","at":[7.3,1.8],"floor":"carpet"},
+    {"label":"Bed 2","at":[7.3,5.5],"floor":"carpet"}
+  ]
+}
